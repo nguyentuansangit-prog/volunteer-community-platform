@@ -134,7 +134,18 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-slate-600 mt-8">
+        {/* Thêm link chuyển đổi sang trang Đăng nhập Organizer */}
+        <div className="text-center mt-6 pt-4 border-t border-slate-100">
+          <p className="text-xs text-slate-500 mb-2">Bạn là Ban tổ chức sự kiện?</p>
+          <a 
+            href="/organizer/login" 
+            className="text-emerald-600 hover:text-emerald-700 font-bold text-sm inline-flex items-center gap-1 transition"
+          >
+            🔑 Đăng nhập dành cho Ban Tổ Chức (Organizer) →
+          </a>
+        </div>
+
+        <p className="text-center text-sm text-slate-600 mt-6">
           Chưa có tài khoản?{' '}
           <Link href="/register" className="text-emerald-600 font-bold hover:underline">
             Đăng ký tài khoản mới
