@@ -160,7 +160,7 @@ erDiagram
 
 ## 4. Relationships Between Tables
 
-Hệ thống sử dụng các mối quan hệ chính sau:
+Các bảng trong hệ thống Volunteer Community Platform có những mối quan hệ chính như sau.
 
 ### 4.1 User - Activity
 
@@ -168,24 +168,169 @@ Quan hệ:
 
 ```text
 User 1 ----- N Activity
+```
+
+Một Organizer có thể tạo và quản lý nhiều Activity.
+
+Khóa liên kết:
+
+```text
 Activity.organizerId -> User.id
+```
 
+Trong đó:
+
+- `User.id`: Primary Key của bảng User.
+- `Activity.organizerId`: Foreign Key tham chiếu đến User.
+
+---
+
+### 4.2 User - Registration
+
+Quan hệ:
+
+```text
 User 1 ----- N Registration
+```
+
+Một Volunteer có thể đăng ký nhiều hoạt động khác nhau.
+
+Khóa liên kết:
+
+```text
 Registration.userId -> User.id
+```
 
+Trong đó:
+
+- `User.id`: Primary Key.
+- `Registration.userId`: Foreign Key.
+
+---
+
+### 4.3 Activity - Registration
+
+Quan hệ:
+
+```text
 Activity 1 ----- N Registration
-Registration.activityId -> Activity.id
+```
 
-User
-  |
-  | 1
-  |
-  | N
-Registration
-  |
-  | N
-  |
-  | 1
-Activity
+Một Activity có thể có nhiều người đăng ký tham gia.
+
+Khóa liên kết:
+
+```text
+Registration.activityId -> Activity.id
+```
+
+Bảng `Registration` đóng vai trò là bảng trung gian giữa `User` và `Activity`.
+
+Quan hệ tổng quát:
+
+```text
+User 1 ----- N Registration N ----- 1 Activity
+```
+
+Vì vậy, xét về nghiệp vụ:
+
+```text
+User N ----- N Activity
+```
+
+Đây là quan hệ Many-to-Many và được xử lý thông qua bảng `Registration`.
+
+---
+
+### 4.4 Category - Activity
+
+Quan hệ:
+
+```text
+Category 1 ----- N Activity
+```
+
+Một Category có thể chứa nhiều Activity.
+
+Ví dụ:
+
+```text
+Environment
+|
+|-- Trồng cây xanh
+|-- Dọn rác bãi biển
+|-- Bảo vệ môi trường
+```
+
+Khóa liên kết:
+
+```text
+Activity.categoryId -> Category.id
+```
+
+Trong đó:
+
+- `Category.id`: Primary Key.
+- `Activity.categoryId`: Foreign Key.
+
+---
+
+### 4.5 User - Notification
+
+Quan hệ:
+
+```text
+User 1 ----- N Notification
+```
+
+Một User có thể nhận nhiều Notification.
+
+Khóa liên kết:
+
+```text
+Notification.userId -> User.id
+```
+
+Ví dụ các thông báo:
+
+- Đăng ký hoạt động thành công.
+- Đăng ký đã được duyệt.
+- Đăng ký bị từ chối.
+- Hoạt động sắp bắt đầu.
+
+---
+
+## 5. Foreign Keys
+
+Các Foreign Key chính của hệ thống:
+
+| Table | Foreign Key | References |
+|---|---|---|
+| Activity | organizerId | User.id |
+| Activity | categoryId | Category.id |
+| Registration | userId | User.id |
+| Registration | activityId | Activity.id |
+| Notification | userId | User.id |
+
+---
+
+## 6. Relationship Summary
+
+Tóm tắt quan hệ giữa các bảng:
+
+```text
+User       1 ----- N Activity
+User       1 ----- N Registration
+Activity   1 ----- N Registration
+Category   1 ----- N Activity
+User       1 ----- N Notification
+```
+
+Ký hiệu:
+
+- `1`: One
+- `N`: Many
+- `PK`: Primary Key
+- `FK`: Foreign Key
 
 
