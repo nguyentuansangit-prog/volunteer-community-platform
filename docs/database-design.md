@@ -93,7 +93,7 @@ Thông tin dự kiến:
 - isRead
 - createdAt
 
-## 2. ERD
+### 2. ERD
 
 Sơ đồ ERD ban đầu của hệ thống:
 
