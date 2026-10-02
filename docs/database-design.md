@@ -157,3 +157,14 @@ erDiagram
     ACTIVITY ||--o{ REGISTRATION : has
     CATEGORY ||--o{ ACTIVITY : contains
     USER ||--o{ NOTIFICATION : receives
+
+## 4. Relationships Between Tables
+
+Hệ thống sử dụng các mối quan hệ chính sau:
+
+### 4.1 User - Activity
+
+Quan hệ:
+
+```text
+User 1 ----- N Activity
