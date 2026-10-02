@@ -51,3 +51,4 @@ next-env.d.ts
 .devin/
 .windsurf/
 skills-lock.json
+.vercel
