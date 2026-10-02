@@ -157,6 +157,7 @@ erDiagram
     ACTIVITY ||--o{ REGISTRATION : has
     CATEGORY ||--o{ ACTIVITY : contains
     USER ||--o{ NOTIFICATION : receives
+```
 
 ## 4. Relationships Between Tables
 
