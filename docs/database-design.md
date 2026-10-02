@@ -168,3 +168,24 @@ Quan hệ:
 
 ```text
 User 1 ----- N Activity
+Activity.organizerId -> User.id
+
+User 1 ----- N Registration
+Registration.userId -> User.id
+
+Activity 1 ----- N Registration
+Registration.activityId -> Activity.id
+
+User
+  |
+  | 1
+  |
+  | N
+Registration
+  |
+  | N
+  |
+  | 1
+Activity
+
+
