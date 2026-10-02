@@ -92,3 +92,68 @@ Thông tin dự kiến:
 - message
 - isRead
 - createdAt
+
+## 2. ERD
+
+Sơ đồ ERD ban đầu của hệ thống:
+
+```mermaid
+erDiagram
+
+    USER {
+        int id PK
+        string fullName
+        string email
+        string password
+        string phone
+        string avatar
+        string role
+        string status
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    CATEGORY {
+        int id PK
+        string name
+        string description
+        datetime createdAt
+    }
+
+    ACTIVITY {
+        int id PK
+        string title
+        string description
+        string location
+        datetime startDate
+        datetime endDate
+        int maxParticipants
+        string status
+        int categoryId FK
+        int organizerId FK
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    REGISTRATION {
+        int id PK
+        int userId FK
+        int activityId FK
+        string status
+        datetime registeredAt
+    }
+
+    NOTIFICATION {
+        int id PK
+        int userId FK
+        string title
+        string message
+        boolean isRead
+        datetime createdAt
+    }
+
+    USER ||--o{ ACTIVITY : organizes
+    USER ||--o{ REGISTRATION : registers
+    ACTIVITY ||--o{ REGISTRATION : has
+    CATEGORY ||--o{ ACTIVITY : contains
+    USER ||--o{ NOTIFICATION : receives
