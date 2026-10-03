@@ -1,5 +1,7 @@
 import { auth } from "../../../auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 
 export default async function AdminPage() {
   const session = await auth();
@@ -8,7 +10,8 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  if (session.user.role !== "ADMIN") {
+  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true, status: true } });
+  if (user?.status !== "ACTIVE" || user.role !== "ADMIN") {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="rounded-2xl bg-white p-8 shadow">
@@ -18,7 +21,7 @@ export default async function AdminPage() {
 
           <p>
             Tài khoản hiện tại có role:
-            <strong> {session.user.role}</strong>
+            <strong> {user?.role ?? "Không còn hoạt động"}</strong>
           </p>
         </div>
       </main>
@@ -39,6 +42,7 @@ export default async function AdminPage() {
         <p>
           Role: {session.user.role}
         </p>
+        <Link href="/activities" className="mt-4 block font-semibold text-emerald-700">Xét duyệt và quản lý hoạt động →</Link>
       </div>
     </main>
   );

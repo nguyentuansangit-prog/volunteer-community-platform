@@ -81,9 +81,13 @@ const response = await fetch("/api/activities", {
 const result = await response.json();
 ```
 
-The existing feature/activity-registration-ui branch has a separate root app
-structure and older Prisma setup. This PR does not merge that branch; Tài can
-connect its controls to these endpoints after aligning with main's src/app.
+The /activities screen now connects these endpoints to the existing NextAuth
+session and current database role. It adapts the emerald/slate visual direction
+of Tài's prototype into main's src/app structure, with no localStorage roles or
+mock participants. The original feature/activity-registration-ui branch remains
+available and is not merged wholesale because its root app and Prisma setup differ.
+The screen supports public discovery, personal registrations/history, organizer
+CRUD/participant review and admin publication. See week6-qa.md for verification.
 
 ## Local verification and demo
 
@@ -108,4 +112,5 @@ Integration tests run real PostgreSQL transactions, race duplicate requests and
 two approvals for one final place, exercise cancellation/rejection and ownership,
 verify audit history, then clean only their uniquely identified fixtures.
 
-Review and frontend/preview QA remain required before merge.
+Local UI QA is complete. Independent team review and verification against a
+migrated preview database remain required before merge.
