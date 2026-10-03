@@ -2,6 +2,10 @@
 
 # dependencies
 /node_modules
+/.npm-cache/
+/.test-postgres/
+/.test-postgres.log
+/.test-postgres-errors.log
 /.pnp
 .pnp.*
 .yarn/*

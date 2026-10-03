@@ -8,7 +8,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test": "tsx --test tests/workflow-rules.test.ts",
+    "test:integration": "tsx --test tests/workflow.integration.test.ts",
+    "test:http": "node --test tests/workflow.http.test.mjs tests/workflow-auth.http.test.mjs",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

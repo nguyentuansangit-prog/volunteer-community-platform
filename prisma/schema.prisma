@@ -14,11 +14,124 @@ enum Role {
 }
 
 model User {
+  id                  String                      @id @default(cuid())
+  name                String
+  email               String                      @unique
+  password            String
+  role                Role                        @default(VOLUNTEER)
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+  phone               String?
+  avatar              String?
+  status              UserStatus                  @default(ACTIVE)
+  activities          Activity[]
+  registrations       Registration[]
+  notifications       Notification[]
+  registrationHistory RegistrationStatusHistory[]
+  activityHistory     ActivityStatusHistory[]
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum ActivityStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  REJECTED
+  CLOSED
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  createdAt   DateTime   @default(now())
+  activities  Activity[]
+}
+
+model Activity {
+  id              String                  @id @default(cuid())
+  title           String
+  description     String
+  location        String
+  startDate       DateTime
+  endDate         DateTime
+  maxParticipants Int
+  status          ActivityStatus          @default(PENDING)
+  categoryId      String
+  organizerId     String
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  category        Category                @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  organizer       User                    @relation(fields: [organizerId], references: [id], onDelete: Restrict)
+  registrations   Registration[]
+  history         ActivityStatusHistory[]
+
+  @@index([status, startDate])
+  @@index([organizerId])
+}
+
+model Registration {
+  id           String                      @id @default(cuid())
+  userId       String
+  activityId   String
+  status       RegistrationStatus          @default(PENDING)
+  registeredAt DateTime                    @default(now())
+  updatedAt    DateTime                    @updatedAt
+  user         User                        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  activity     Activity                    @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  history      RegistrationStatusHistory[]
+
+  @@unique([userId, activityId])
+  @@index([activityId, status])
+}
+
+model RegistrationStatusHistory {
+  id             String              @id @default(cuid())
+  registrationId String
+  actorId        String
+  fromStatus     RegistrationStatus?
+  toStatus       RegistrationStatus
+  reason         String?
+  createdAt      DateTime            @default(now())
+  registration   Registration        @relation(fields: [registrationId], references: [id], onDelete: Restrict)
+  actor          User                @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([registrationId, createdAt])
+}
+
+model ActivityStatusHistory {
+  id         String          @id @default(cuid())
+  activityId String
+  actorId    String
+  fromStatus ActivityStatus?
+  toStatus   ActivityStatus
+  reason     String?
+  createdAt  DateTime        @default(now())
+  activity   Activity        @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  actor      User            @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([activityId, createdAt])
+}
+
+model Notification {
   id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(VOLUNTEER)
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
 }

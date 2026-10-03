@@ -17,6 +17,8 @@ export default async function Home() {
             Bạn chưa đăng nhập.
           </p>
 
+          <Link href="/activities" className="mb-4 block font-semibold text-emerald-700">Khám phá hoạt động tình nguyện →</Link>
+
           <Link
             href="/login"
             className="rounded-lg bg-black px-4 py-2 text-white"
@@ -54,6 +56,7 @@ export default async function Home() {
         </div>
 
         <LogoutButton />
+        <Link href="/activities" className="mt-4 block font-semibold text-emerald-700">Xem và quản lý hoạt động →</Link>
       </div>
     </main>
   );
