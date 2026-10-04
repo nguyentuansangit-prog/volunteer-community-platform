@@ -29,7 +29,7 @@ model User {
   notifications       Notification[]
   registrationHistory RegistrationStatusHistory[]
   activityHistory     ActivityStatusHistory[]
-  attendance          Attendance[]
+  attendance          Attendance[]                 @relation("AttendanceUser")
   attendanceRecorded  Attendance[]                 @relation("AttendanceRecordedBy")
 }
 
@@ -145,7 +145,7 @@ model Attendance {
   updatedAt      DateTime         @updatedAt
   registration   Registration     @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   activity       Activity         @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  user           User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  user           User             @relation("AttendanceUser", fields: [userId], references: [id], onDelete: Restrict)
   recordedBy     User             @relation("AttendanceRecordedBy", fields: [recordedById], references: [id], onDelete: Restrict)
 
   @@index([activityId, status])
