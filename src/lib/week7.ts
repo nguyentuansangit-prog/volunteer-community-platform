@@ -1,12 +1,7 @@
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { type Actor, canManage, requireRule } from "@/lib/workflow-rules";
-import { z } from "zod";
-
-const attendanceInput = z.object({
-  status: z.enum(["ATTENDED", "ABSENT"]),
-  volunteerHours: z.coerce.number().min(0).max(1000).default(0),
-}).strict();
+import { activityDurationHours, attendanceInput, resolveVolunteerHours } from "@/lib/week7-rules";
 
 export async function saveAttendance(actor: Actor, registrationId: string, input: unknown) {
   const data = attendanceInput.parse(input);
@@ -19,12 +14,8 @@ export async function saveAttendance(actor: Actor, registrationId: string, input
     requireRule(canManage(actor, registration.activity.organizerId), 403, "FORBIDDEN", "Cannot record attendance");
     requireRule(registration.status === "APPROVED", 409, "ATTENDANCE_NOT_ALLOWED", "Only approved registrations can be marked");
 
-    const durationHours = Math.max(
-      0,
-      (registration.activity.endDate.getTime() - registration.activity.startDate.getTime()) / 3600000,
-    );
-    const hours = data.status === "ATTENDED" ? data.volunteerHours : 0;
-    requireRule(hours <= durationHours, 422, "INVALID_VOLUNTEER_HOURS", "Volunteer hours cannot exceed activity duration");
+    const durationHours = activityDurationHours(registration.activity.startDate, registration.activity.endDate);
+    const hours = resolveVolunteerHours(data.status, data.volunteerHours, durationHours);
 
     return tx.attendance.upsert({
       where: { registrationId },
