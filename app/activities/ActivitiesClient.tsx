@@ -45,6 +45,34 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
   const [cancelActivity, setCancelActivity] = useState<Activity | null>(null);
   const [message, setMessage] = useState('');
 
+  // Các state hỗ trợ tìm kiếm và phân trang
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Thêm các state quản lý trạng thái tải và lỗi
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  // Khi user gõ tìm kiếm -> Reset page về 1
+  const handleSearchChange = (val: string) => {
+    setSearchKeyword(val);
+    setCurrentPage(1); // 👈 Bắt buộc reset về 1
+  };
+
+  // Khi user đổi địa điểm lọc -> Reset page về 1
+  const handleLocationChange = (val: string) => {
+    setSelectedLocation(val);
+    setCurrentPage(1); // 👈 Bắt buộc reset về 1
+  };
+
+  // Khi user đổi trạng thái lọc -> Reset page về 1
+  const handleStatusChange = (val: string) => {
+    setSelectedStatus(val);
+    setCurrentPage(1); // 👈 Bắt buộc reset về 1
+  };
+
   const handleOpenRegister = (activity: Activity) => {
     if (userRole === 'GUEST' || !currentUserName) {
       alert('Bạn cần đăng nhập để đăng ký hoạt động.');
@@ -105,6 +133,17 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
     return activity.participants.some((p) => p.name === currentUserName);
   };
 
+  // Lọc danh sách hoạt động dựa trên từ khóa gõ vào và địa điểm
+  const filteredActivities = activities.filter((activity) => {
+    const matchesSearch = activity.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                          activity.description.toLowerCase().includes(searchKeyword.toLowerCase());
+    
+    // Nếu có chọn địa điểm thì khớp địa điểm, không thì bỏ qua
+    const matchesLocation = selectedLocation ? activity.location === selectedLocation : true;
+
+    return matchesSearch && matchesLocation;
+  });
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
       <Navbar role={userRole} userName={currentUserName} />
@@ -164,16 +203,87 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
           </div>
         </div>
 
-        {activities.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="text-5xl mb-4">📭</div>
-            <p className="text-slate-500">
-              Hiện tại chưa có hoạt động nào được lấy từ Database.
-            </p>
+        {/* Thanh công cụ tìm kiếm và lọc dữ liệu (Toolbar) */}
+        <div className="max-w-3xl mx-auto mb-10 space-y-4">
+          {/* 1. Ô tìm kiếm */}
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 text-lg">
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Tìm hoạt động theo tên hoặc mô tả..."
+              value={searchKeyword}
+              onChange={(e) => handleSearchChange(e.target.value)} // Cập nhật từ khóa và reset page
+              className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+            />
           </div>
-        ) : (
+
+          {/* 2. Bộ lọc Địa điểm & Trạng thái (Phần 5 & 6) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Filter Location */}
+            <div>
+              <select 
+                value={selectedLocation}
+                onChange={(e) => handleLocationChange(e.target.value)} // Cập nhật địa điểm và reset page
+                className="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+              >
+                <option value="">📍 Tất cả địa điểm</option>
+                <option value="An Giang">An Giang</option>
+                <option value="Cần Thơ">Cần Thơ</option>
+                <option value="Vĩnh Long">Vĩnh Long</option>
+                <option value="Đồng Tháp">Đồng Tháp</option>
+                <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+              </select>
+            </div>
+
+            {/* Filter Status */}
+            <div>
+              <select 
+                value={selectedStatus}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+              >
+                <option value="">📌 Tất cả trạng thái</option>
+                <option value="PUBLISHED">Sắp diễn ra / Đang mở</option>
+                <option value="CLOSED">Đã kết thúc</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* CÁC TRẠNG THÁI HIỂN THỊ */}
+        {isLoading && (
+          <div className="py-20 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent mb-4"></div>
+            <p className="text-slate-500 font-medium">Đang tải hoạt động...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center max-w-md mx-auto my-12">
+            <p className="text-red-600 font-semibold mb-4">Không thể tải danh sách hoạt động.</p>
+            <button 
+              // onClick={fetchActivities} // Hàm gọi lại API
+              className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-md shadow-red-600/20"
+            >
+              Vui lòng thử lại
+            </button>
+          </div>
+        )}
+
+        {!isLoading && !error && filteredActivities.length === 0 && (
+          <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 max-w-md mx-auto my-12 shadow-sm">
+            <div className="text-4xl mb-3">🔎</div>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">Không tìm thấy hoạt động phù hợp.</h3>
+            <p className="text-slate-500 text-sm">Hãy thử thay đổi từ khóa hoặc bộ lọc.</p>
+          </div>
+        )}
+
+        {/* Danh sách hoạt động (Chỉ hiển thị khi đã tải xong, không lỗi và có dữ liệu) */}
+        {!isLoading && !error && filteredActivities.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {activities.map((activity) => {
+            {filteredActivities.map((activity) => {
               const registered = isRegistered(activity);
               const isFull = activity.participants.length >= activity.capacity;
 
@@ -277,6 +387,34 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Giao diện Phân trang (Pagination) - Chỉ hiển thị khi có dữ liệu */}
+        {!isLoading && !error && filteredActivities.length > 0 && (
+          <div className="flex items-center justify-center gap-4 mt-12 py-4">
+            {/* Nút Trang trước */}
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-5 py-2.5 rounded-xl font-bold text-sm bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm"
+            >
+              ← Trang trước
+            </button>
+
+            {/* Hiển thị số trang hiện tại / tổng số trang */}
+            <div className="px-4 py-2 bg-emerald-50 text-emerald-800 rounded-xl font-bold text-sm border border-emerald-100">
+              Trang {currentPage} / 5
+            </div>
+
+            {/* Nút Trang sau */}
+            <button
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={currentPage === 5} // (Thay số 5 bằng tổng số trang thực tế từ backend)
+              className="px-5 py-2.5 rounded-xl font-bold text-sm bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm"
+            >
+              Trang sau →
+            </button>
           </div>
         )}
       </main>
