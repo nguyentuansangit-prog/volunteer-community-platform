@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import LogoutButton from "@/components/logout-button";
 
 type User = { id: string; name: string; role: "VOLUNTEER" | "ORGANIZER" | "ADMIN" };
 type Category = { id: string; name: string };
@@ -19,6 +18,7 @@ type Registration = {
   history: { id: string; fromStatus: string | null; toStatus: string; reason: string | null; createdAt: string }[];
 };
 type Tab = "public" | "mine" | "managed";
+type ActivityPage = { items: Activity[]; pagination: { page: number; pageSize: number; total: number; totalPages: number } };
 const labels: Record<string, string> = {
   DRAFT: "Bản nháp", PENDING: "Chờ duyệt", PUBLISHED: "Đã công khai",
   REJECTED: "Đã từ chối", CLOSED: "Đã đóng", APPROVED: "Đã duyệt", CANCELLED: "Đã hủy",
@@ -81,10 +81,12 @@ function History({ registration }: { registration: Registration }) {
   </details>;
 }
 
-export default function ActivityWorkspace({ user }: { user: User | null }) {
+export default function ActivityWorkspace({ user, initialTab = "public" }: { user: User | null; initialTab?: Tab }) {
   const canManage = !!user && user.role !== "VOLUNTEER";
-  const [tab, setTab] = useState<Tab>("public");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState({ keyword: "", location: "", status: "" });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 20, total: 0, totalPages: 0 });
   const [activities, setActivities] = useState<Activity[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -102,13 +104,13 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
   const focusConfirmation = useCallback((element: HTMLButtonElement | null) => { element?.focus(); }, []);
 
   const fetchData = useCallback((signal?: AbortSignal) => Promise.all([
-    tab === "mine" ? Promise.resolve([] as Activity[]) : api<Activity[]>(`/api/activities?scope=${tab}&page=${page}`, { signal }),
+    tab === "mine" ? Promise.resolve({ items: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } } as ActivityPage) : api<ActivityPage>("/api/activities?" + new URLSearchParams({ scope: tab, page: String(page), meta: "1", q: filters.keyword, location: filters.location, ...(tab === "managed" && filters.status ? { status: filters.status } : {}) }), { signal }),
     user ? allRegistrations("/api/registrations", signal) : Promise.resolve([] as Registration[]),
     api<Category[]>("/api/categories", { signal }),
-  ]), [tab, page, user]);
-  const applyData = useCallback(([items, mine, options]: [Activity[], Registration[], Category[]]) => {
+  ]), [tab, page, user, filters]);
+  const applyData = useCallback(([result, mine, options]: [ActivityPage, Registration[], Category[]]) => {
     setLoadFailed(false); setNow(Date.now());
-    setActivities(items); setRegistrations(mine); setCategories(options);
+    setActivities(result.items); setPagination(result.pagination); setRegistrations(mine); setCategories(options);
   }, []);
   const applyFailure = useCallback((error: unknown) => {
     setLoadFailed(true);
@@ -213,26 +215,28 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
   }
   function switchTab(next: Tab) {
     if (tab !== next) setLoading(true);
-    setTab(next); setPage(1); setNotice(null); setParticipants(null); setEditor(null); setConfirmation(null);
+    setTab(next); setPage(1); setFilters({ keyword: "", location: "", status: "" }); setNotice(null); setParticipants(null); setEditor(null); setConfirmation(null);
   }
   const editing = editor && editor !== "new" ? editor : null;
 
   return <div className="min-h-screen bg-slate-50 text-slate-900">
-    <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-8">
-        <Link href="/" className="text-lg font-extrabold text-emerald-800">Volunteer Community</Link>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          {user ? <><span>{user.name} · {user.role === "ADMIN" ? "Quản trị viên" : user.role === "ORGANIZER" ? "Nhà tổ chức" : "Tình nguyện viên"}</span><LogoutButton /></>
-            : <Link href="/login" className={primary}>Đăng nhập</Link>}
-        </div>
-      </div>
-    </header>
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-8">
       <div className="mb-8 max-w-2xl">
         <p className="mb-2 text-sm font-semibold text-emerald-700">Cộng đồng tình nguyện</p>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Hoạt động tình nguyện</h1>
         <p className="mt-3 text-slate-600">Lựa chọn hoạt động phù hợp và cùng chung tay tạo nên những giá trị tốt đẹp cho cộng đồng.</p>
       </div>
+      {tab !== "mine" && <form className="mb-6 grid gap-3 rounded-2xl border border-slate-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-4" onSubmit={(event) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        setLoading(true); setPage(1);
+        setFilters({ keyword: String(data.get("keyword") ?? "").trim(), location: String(data.get("filterLocation") ?? "").trim(), status: String(data.get("filterStatus") ?? "") });
+      }} key={tab}>
+        <label>Tìm hoạt động<input name="keyword" placeholder="Tên hoặc địa điểm" className={field} maxLength={200} /></label>
+        <label>Lọc địa điểm<input name="filterLocation" placeholder="Nhập địa điểm" className={field} maxLength={500} /></label>
+        {tab === "managed" && <label>Lọc trạng thái<select name="filterStatus" className={field}><option value="">Tất cả trạng thái</option>{["DRAFT", "PENDING", "PUBLISHED", "REJECTED", "CLOSED"].map((status) => <option key={status} value={status}>{labels[status]}</option>)}</select></label>}
+        <div className="flex items-end gap-2"><button className={primary} disabled={busy || loading}>Tìm kiếm</button><button type="reset" className={secondary} disabled={busy || loading} onClick={() => { setLoading(true); setPage(1); setFilters({ keyword: "", location: "", status: "" }); }}>Xóa bộ lọc</button></div>
+      </form>}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <nav aria-label="Danh sách hoạt động" className="flex flex-wrap gap-2">
           {([["public", "Khám phá"], ...(user ? [["mine", "Đăng ký của tôi"]] : []), ...(canManage ? [["managed", "Quản lý hoạt động"]] : [])] as [Tab, string][]).map(([key, label]) =>
@@ -320,6 +324,7 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
                     <div className="flex flex-wrap gap-2">
                       {["DRAFT", "REJECTED"].includes(activity.status) && <button disabled={busy} className={secondary} onClick={() => { setEditor(activity); setParticipants(null); }}>Chỉnh sửa</button>}
                       <button disabled={busy} className={secondary} onClick={() => void openParticipants(activity)}>Người đăng ký</button>
+                      <Link href={`/activities/${activity.id}/attendance`} className={secondary}>Điểm danh</Link>
                       {["DRAFT", "PENDING", "REJECTED"].includes(activity.status) && <button disabled={busy} className={secondary} onClick={() => {
                         setConfirmation({
                           path: `/api/activities/${activity.id}`, method: "DELETE",
@@ -341,9 +346,8 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
               </article>;
             })}
           </div>
-          <div className="mt-6 flex items-center justify-center gap-4"><button className={secondary} disabled={busy || page === 1} onClick={() => { setLoading(true); setPage(page - 1); }}>Trang trước</button><span className="text-sm">Trang {page}</span><button className={secondary} disabled={busy || activities.length < 50} onClick={() => { setLoading(true); setPage(page + 1); }}>Trang sau</button></div>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4"><button className={secondary} disabled={busy || page === 1} onClick={() => { setLoading(true); setPage(page - 1); }}>Trang trước</button><span className="text-sm">Trang {page} / {Math.max(1, pagination.totalPages)} · {pagination.total} hoạt động</span><button className={secondary} disabled={busy || page >= pagination.totalPages} onClick={() => { setLoading(true); setPage(page + 1); }}>Trang sau</button></div>
         </section>)}
     </main>
-    <footer className="mx-auto max-w-7xl px-4 py-8 text-sm text-slate-500 sm:px-8">Volunteer Community · Cùng nhau vì cộng đồng</footer>
   </div>;
 }
