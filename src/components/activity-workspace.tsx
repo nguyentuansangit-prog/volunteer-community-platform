@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import LogoutButton from "@/components/logout-button";
 
 type User = { id: string; name: string; role: "VOLUNTEER" | "ORGANIZER" | "ADMIN" };
 type Category = { id: string; name: string };
@@ -81,9 +80,9 @@ function History({ registration }: { registration: Registration }) {
   </details>;
 }
 
-export default function ActivityWorkspace({ user }: { user: User | null }) {
+export default function ActivityWorkspace({ user, initialTab = "public" }: { user: User | null; initialTab?: Tab }) {
   const canManage = !!user && user.role !== "VOLUNTEER";
-  const [tab, setTab] = useState<Tab>("public");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [page, setPage] = useState(1);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -218,15 +217,6 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
   const editing = editor && editor !== "new" ? editor : null;
 
   return <div className="min-h-screen bg-slate-50 text-slate-900">
-    <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-8">
-        <Link href="/" className="text-lg font-extrabold text-emerald-800">Volunteer Community</Link>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          {user ? <><span>{user.name} · {user.role === "ADMIN" ? "Quản trị viên" : user.role === "ORGANIZER" ? "Nhà tổ chức" : "Tình nguyện viên"}</span><LogoutButton /></>
-            : <><Link href="/login" className={primary}>Đăng nhập</Link><Link href="/register" className="font-semibold text-emerald-700 underline">Đăng ký tài khoản</Link></>}
-        </div>
-      </div>
-    </header>
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-8">
       <div className="mb-8 max-w-2xl">
         <p className="mb-2 text-sm font-semibold text-emerald-700">Cộng đồng tình nguyện</p>
