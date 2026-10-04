@@ -9,7 +9,32 @@ export default function LoginPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  // State quản lý hiển thị cửa sổ nổi (Modal) đăng nhập Admin
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminSecretPassword, setAdminSecretPassword] = useState('');
+  const [adminError, setAdminError] = useState<string | null>(null);
+
   const router = useRouter();
+
+  // Xử lý xác thực mật khẩu Admin từ cửa sổ nổi
+  const handleAdminLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminError(null);
+
+    // Kiểm tra mật khẩu bảo mật của Admin
+    if (adminSecretPassword === '12345') {
+      localStorage.setItem('userEmail', 'admin@system.com');
+      localStorage.setItem('currentUserName', 'Quản trị viên Hệ thống');
+      localStorage.setItem('userRole', 'ADMIN');
+
+      setShowAdminModal(false);
+      router.push('/admin/dashboard');
+      router.refresh();
+    } else {
+      setAdminError('Mật khẩu quản trị không chính xác!');
+    }
+  };
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -23,23 +48,13 @@ export default function LoginPage() {
 
     let hasError = false;
 
-    // Trường hợp 1: Bấm Đăng nhập khi bỏ trống hoặc sai định dạng email
     if (!email || !email.trim()) {
       setEmailError('Vui lòng nhập email.');
       hasError = true;
-    } else if (!email.includes('@') || !email.includes('.')) {
-      // Trường hợp 2: Nhập email sai (ví dụ: abc)
-      setEmailError('Email không đúng định dạng.');
-      hasError = true;
     }
 
-    // Kiểm tra mật khẩu
     if (!password) {
       setPasswordError('Vui lòng nhập mật khẩu.');
-      hasError = true;
-    } else if (password.length < 6) {
-      // Trường hợp 3: Mật khẩu dưới 6 ký tự (ví dụ: 123)
-      setPasswordError('Mật khẩu phải có ít nhất 6 ký tự.');
       hasError = true;
     }
 
@@ -71,7 +86,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-teal-900 to-emerald-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-teal-900 to-emerald-900 px-4 py-12 relative">
       <div className="max-w-md w-full bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/20 relative">
         
         {/* Nút quay về trang chủ */}
@@ -85,9 +100,19 @@ export default function LoginPage() {
         </div>
 
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-xl font-bold mb-3 shadow-inner">
-            🔐
-          </div>
+          {/* 🔐 Bấm vào ổ khóa sẽ bật cửa sổ nổi (Modal) nhập mật khẩu Admin */}
+          <button 
+            type="button"
+            onClick={() => {
+              setAdminSecretPassword('');
+              setAdminError(null);
+              setShowAdminModal(true);
+            }}
+            title="Đăng nhập quản trị viên"
+            className="w-14 h-14 bg-emerald-100 hover:bg-emerald-200 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold mb-3 shadow-inner transition transform hover:scale-105 cursor-pointer group"
+          >
+            <span className="group-hover:rotate-12 transition">🔐</span>
+          </button>
           <h2 className="text-2xl font-black text-slate-900 tracking-tight">Chào mừng trở lại</h2>
           <p className="text-sm text-slate-500 mt-1">Đăng nhập để tiếp tục hành trình lan tỏa yêu thương</p>
         </div>
@@ -134,7 +159,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Thêm link chuyển đổi sang trang Đăng nhập Organizer */}
+        {/* Link chuyển đổi sang trang Đăng nhập Organizer */}
         <div className="text-center mt-6 pt-4 border-t border-slate-100">
           <p className="text-xs text-slate-500 mb-2">Bạn là Ban tổ chức sự kiện?</p>
           <a 
@@ -152,6 +177,66 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
+
+      {/* 🌟 CỬA SỔ NỔI (MODAL) ĐĂNG NHẬP ADMIN BẢO MẬT */}
+      {showAdminModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🛡️</span>
+                <h3 className="font-black text-slate-900 text-lg">Xác thực Quản trị viên</h3>
+              </div>
+              <button
+                onClick={() => setShowAdminModal(false)}
+                className="text-slate-400 hover:text-slate-600 font-bold text-lg px-2"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 mb-5">
+              Vui lòng nhập mật khẩu bảo mật hệ thống để truy cập vào bảng điều khiển Admin.
+            </p>
+
+            {adminError && (
+              <div className="bg-red-50 border border-red-100 text-red-600 p-3 rounded-xl mb-4 text-xs font-medium text-center">
+                {adminError}
+              </div>
+            )}
+
+            <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Mật khẩu bảo mật</label>
+                <input
+                  type="password"
+                  value={adminSecretPassword}
+                  onChange={(e) => setAdminSecretPassword(e.target.value)}
+                  placeholder="Nhập mật khẩu (123XX)..."
+                  autoFocus
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none text-sm text-slate-900 font-medium"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminModal(false)}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold text-sm transition"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-emerald-600/25 transition"
+                >
+                  Xác nhận
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
