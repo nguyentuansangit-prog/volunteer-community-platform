@@ -290,7 +290,7 @@ Các ảnh cookie phải che toàn bộ Value và phần xem trước token.
 
 | Test ID | Vấn đề | Mức độ đề xuất | Theo dõi |
 | --- | --- | --- | --- |
-| ROLE-12 | Organizer vẫn đăng ký tham gia hoạt động được. UI báo gửi thành công, trạng thái Chờ duyệt còn sau reload. | Major | Bổ sung số/link Bug Issue đã tạo; chưa ghi nhận số Issue trong báo cáo. |
+| ROLE-12 | Organizer vẫn đăng ký tham gia hoạt động được. UI báo gửi thành công, trạng thái Chờ duyệt còn sau reload. | Major | [Bug Issue #43](https://github.com/nguyentuansangit-prog/volunteer-community-platform/issues/43) — Open |
 
 Tiêu đề Bug:
 [Week 5][Bug][RBAC] Organizer vẫn đăng ký tham gia hoạt động được
