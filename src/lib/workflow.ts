@@ -113,6 +113,9 @@ export async function changeRegistrationStatus(actor: Actor, id: string, input: 
         actorId: actor.id, fromStatus: registration.status, toStatus: data.status, reason: data.reason,
       } } },
     });
+    if (data.status === "CANCELLED") {
+      await tx.attendance.deleteMany({ where: { registrationId: id } });
+    }
     if (registration.status === "PENDING" && ["APPROVED", "REJECTED"].includes(data.status)) {
       await tx.notification.create({
         data: {
@@ -134,11 +137,11 @@ export type ActivityListFilters = {
 };
 
 export async function listActivities(actor: Actor | null, scope: string, page = 1) {
-  const result = await listActivitiesPage(actor, scope, { page });
+  const result = await listActivitiesPage(actor, scope, { page }, 50);
   return result.items;
 }
 
-export async function listActivitiesPage(actor: Actor | null, scope: string, filters: ActivityListFilters = {}) {
+export async function listActivitiesPage(actor: Actor | null, scope: string, filters: ActivityListFilters = {}, take = 20) {
   const page = filters.page ?? 1;
   let where: Prisma.ActivityWhereInput = { status: "PUBLISHED" };
   if (scope === "managed") {
@@ -158,7 +161,6 @@ export async function listActivitiesPage(actor: Actor | null, scope: string, fil
   if (filters.location) {
     where = { ...where, location: { contains: filters.location, mode: "insensitive" } };
   }
-  const take = 20;
   const [items, total] = await Promise.all([
     prisma.activity.findMany({
       where,

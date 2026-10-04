@@ -6,6 +6,10 @@ import { activityDurationHours, attendanceInput, resolveVolunteerHours } from "@
 export async function saveAttendance(actor: Actor, registrationId: string, input: unknown) {
   const data = attendanceInput.parse(input);
   return prisma.$transaction(async (tx) => {
+    const initial = await tx.registration.findUnique({ where: { id: registrationId } });
+    requireRule(initial, 404, "NOT_FOUND", "Registration not found");
+    // Use the same lock as registration cancellation so approval cannot become stale.
+    await tx.$queryRaw`SELECT "id" FROM "Activity" WHERE "id" = ${initial.activityId} FOR UPDATE`;
     const registration = await tx.registration.findUnique({
       where: { id: registrationId },
       include: { activity: true },

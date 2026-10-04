@@ -10,8 +10,8 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "test": "tsx --test tests/workflow-rules.test.ts tests/week7-rules.test.ts",
-    "test:integration": "tsx --test tests/workflow.integration.test.ts",
-    "test:http": "node --test tests/workflow.http.test.mjs tests/workflow-auth.http.test.mjs",
+    "test:integration": "tsx --test tests/workflow.integration.test.ts tests/week7.integration.test.ts",
+    "test:http": "node --test tests/workflow.http.test.mjs tests/workflow-auth.http.test.mjs tests/week7.http.test.mjs",
     "db:seed": "prisma db seed"
   },
   "dependencies": {
