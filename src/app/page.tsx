@@ -25,6 +25,7 @@ export default async function Home() {
           >
             Đăng nhập
           </Link>
+          <Link href="/register" className="ml-4 font-semibold text-emerald-700 underline">Đăng ký tài khoản</Link>
         </div>
       </main>
     );

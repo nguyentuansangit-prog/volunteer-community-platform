@@ -223,7 +223,7 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
         <Link href="/" className="text-lg font-extrabold text-emerald-800">Volunteer Community</Link>
         <div className="flex flex-wrap items-center gap-4 text-sm">
           {user ? <><span>{user.name} · {user.role === "ADMIN" ? "Quản trị viên" : user.role === "ORGANIZER" ? "Nhà tổ chức" : "Tình nguyện viên"}</span><LogoutButton /></>
-            : <Link href="/login" className={primary}>Đăng nhập</Link>}
+            : <><Link href="/login" className={primary}>Đăng nhập</Link><Link href="/register" className="font-semibold text-emerald-700 underline">Đăng ký tài khoản</Link></>}
         </div>
       </div>
     </header>
