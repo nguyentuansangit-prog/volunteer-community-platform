@@ -1,201 +1,282 @@
-# Week 5 – Authentication & RBAC Test Cases
+# Week 5 — Authentication & RBAC Test Cases
 
 ## 1. Thông tin chung
 
-- Dự án: Volunteer Community Platform
-- Nhóm: 1 – Kyanon Internship 2026
-- Người phụ trách: Nguyễn Trung Kiên – QA/Documentation
-- Issue liên quan: #12
-- Tài liệu yêu cầu: auth-and-roles-requirements.md
-- Môi trường: Vercel Preview
-- Preview URL: Chưa cập nhật
-- Branch/Commit được kiểm thử: Chưa cập nhật
-- Ngày kiểm thử: Chưa cập nhật
-- Trình duyệt/Thiết bị: Chưa cập nhật
+- Dự án: Volunteer Community Platform.
+- Nhóm: 1 — Kyanon Internship 2026.
+- Người phụ trách: Nguyễn Trung Kiên — QA/Documentation.
+- Issue công việc: #12.
+- Tài liệu yêu cầu: auth-and-roles-requirements.md.
+- Nhánh lưu tài liệu: docs/week5-authentication-qa.
+- Ngày kiểm thử đợt 1: 04/10/2026.
+- Môi trường đã kiểm thử: Production trên Vercel.
+- URL: https://volunteer-community-platform.vercel.app
+- Branch/Commit của bản Production: Chưa xác minh.
+- Trình duyệt/Thiết bị: Microsoft Edge trên máy tính Windows; chưa ghi nhận phiên bản cụ thể.
+- Vercel Preview: Blocked — đang chờ chủ dự án cấp quyền truy cập.
+
+Lưu ý: Kết quả trên Production không thay thế kiểm thử Vercel Preview. Không gán kết quả Production cho commit của nhánh tài liệu QA.
 
 ## 2. Phạm vi kiểm thử
 
 - Đăng ký tài khoản Volunteer và Organizer.
-- Validation của form đăng ký và đăng nhập.
-- Đăng nhập và điều hướng theo vai trò.
+- Validation form đăng ký và đăng nhập.
+- Đăng nhập và điều hướng theo Role.
 - Đăng xuất và quản lý phiên.
 - Phân quyền và truy cập trái phép.
 - Giao diện Authentication trên máy tính và điện thoại.
+- Kiểm thử trên Vercel Preview khi có quyền truy cập.
 
-Cập nhật hồ sơ và đổi mật khẩu không thuộc phạm vi Issue #12,
-trừ khi nhóm bổ sung yêu cầu.
+Cập nhật hồ sơ và đổi mật khẩu không thuộc phạm vi Issue #12, trừ khi nhóm bổ sung yêu cầu.
 
-## 3. Điều kiện kiểm thử
-
-- Vercel Preview hoạt động và xác định được commit đang triển khai.
-- Có tài khoản thử nghiệm đang kích hoạt cho Volunteer, Organizer và Admin.
-- Có email chưa tồn tại để kiểm thử đăng ký.
-- Có URL thực tế của các trang theo từng vai trò.
-- Có thông tin thời hạn phiên và cách kiểm thử phiên hết hạn.
-- Các kiểm tra API sử dụng endpoint thực tế và dữ liệu thử nghiệm
-  được nhóm cung cấp.
-- Không lưu mật khẩu, token hoặc cookie thật trong tài liệu/minh chứng.
-
-Nếu thiếu điều kiện hoặc chức năng chưa triển khai, ghi Blocked
-và nêu rõ lý do.
-
-## 4. Quy ước trạng thái
+## 3. Quy ước trạng thái
 
 | Trạng thái | Ý nghĩa |
-|---|---|
-| Not Run | Chưa thực hiện |
-| Pass | Kết quả thực tế đúng với kết quả mong đợi |
-| Fail | Kết quả thực tế khác với kết quả mong đợi |
-| Blocked | Không thể thực hiện do thiếu điều kiện |
+| --- | --- |
+| Pass | Đã thực hiện đủ bước và kết quả phù hợp yêu cầu của case. |
+| Fail | Kết quả thực tế khác yêu cầu. |
+| Blocked | Không thể thực hiện do thiếu chức năng, dữ liệu hoặc quyền truy cập. |
+| Not Run | Chưa thực hiện. |
+| In Progress | Đã thực hiện một phần, còn bước hoặc tiêu chí chưa xác minh. |
 
-Tất cả test case ban đầu có trạng thái Not Run.
-Chỉ cập nhật kết quả sau khi kiểm thử thực tế.
+Mỗi kết quả cần ghi đúng môi trường, ngày kiểm thử và bằng chứng thực tế. Không đánh dấu Pass chỉ dựa trên việc đọc code.
 
-## 5. Test case đăng ký
+## 4. Điều kiện và dữ liệu kiểm thử
 
-Điều kiện chung: Người kiểm thử chưa đăng nhập và mở được trang đăng ký.
-Mỗi lần đăng ký thành công phải sử dụng một email thử nghiệm chưa tồn tại.
-Các mật khẩu dưới đây chỉ là dữ liệu kiểm thử minh họa.
+### 4.1. Điều kiện
 
-| ID | Yêu cầu | Trường hợp / Dữ liệu | Các bước thực hiện | Kết quả mong đợi |
-|---|---|---|---|---|
-| REG-01 | AC1.1–AC1.3 | Đăng ký Volunteer hợp lệ; email mới; mật khẩu QaTest12 | 1. Nhập họ tên, email, mật khẩu và xác nhận khớp nhau. 2. Chọn VOLUNTEER. 3. Gửi form. 4. Đăng nhập bằng tài khoản vừa tạo. | Tạo tài khoản kích hoạt với vai trò VOLUNTEER; chuyển đến Đăng nhập kèm thông báo thành công; tài khoản đăng nhập được. |
-| REG-02 | AC1.1–AC1.3 | Đăng ký Organizer hợp lệ; email mới; mật khẩu QaTest12 | 1. Nhập đầy đủ dữ liệu hợp lệ. 2. Chọn ORGANIZER. 3. Gửi form. 4. Đăng nhập bằng tài khoản vừa tạo. | Tạo tài khoản kích hoạt với vai trò ORGANIZER; chuyển đến Đăng nhập kèm thông báo thành công; tài khoản đăng nhập được. |
-| REG-03 | AC1.1 | Thiếu dữ liệu bắt buộc | 1. Lần lượt bỏ trống Họ tên, Email, Mật khẩu, Xác nhận mật khẩu hoặc Vai trò. 2. Giữ các trường khác hợp lệ. 3. Gửi form sau mỗi lần. | Báo lỗi tương ứng với dữ liệu bắt buộc bị thiếu; không tạo tài khoản. Nếu vai trò được chọn mặc định, kiểm tra thiếu vai trò qua request thử nghiệm do nhóm hướng dẫn. |
-| REG-04 | AC1.2 | Email sai định dạng: kien@ | 1. Nhập email sai định dạng. 2. Nhập các trường khác hợp lệ. 3. Gửi form. | Báo email không hợp lệ; không tạo tài khoản. |
-| REG-05 | AC1.2 | Email đã tồn tại | 1. Nhập email của tài khoản thử nghiệm đã có. 2. Nhập các trường khác hợp lệ. 3. Gửi form. | Từ chối đăng ký; không tạo thêm tài khoản có cùng email. |
-| REG-06 | AC1.2 | Mật khẩu 7 ký tự: QaTest1 | 1. Nhập mật khẩu và xác nhận là QaTest1. 2. Nhập các trường khác hợp lệ. 3. Gửi form. | Báo lỗi độ dài tối thiểu 8 ký tự; không tạo tài khoản. |
-| REG-07 | AC1.2 | Mật khẩu đúng 8 ký tự: QaTest12 | 1. Dùng email mới. 2. Nhập mật khẩu và xác nhận là QaTest12. 3. Điền đầy đủ dữ liệu. 4. Gửi form. | Chấp nhận mật khẩu đủ 8 ký tự, có chữ hoa, chữ thường và số; đăng ký thành công. |
-| REG-08 | AC1.2 | Mật khẩu thiếu chữ hoa: qatest12 | 1. Nhập mật khẩu và xác nhận là qatest12. 2. Nhập các trường khác hợp lệ. 3. Gửi form. | Báo lỗi quy tắc mật khẩu; không tạo tài khoản. |
-| REG-09 | AC1.2 | Mật khẩu thiếu chữ thường: QATEST12 | 1. Nhập mật khẩu và xác nhận là QATEST12. 2. Nhập các trường khác hợp lệ. 3. Gửi form. | Báo lỗi quy tắc mật khẩu; không tạo tài khoản. |
-| REG-10 | AC1.2 | Mật khẩu không có số hoặc ký tự đặc biệt: QaTestAb | 1. Nhập mật khẩu và xác nhận là QaTestAb. 2. Nhập các trường khác hợp lệ. 3. Gửi form. | Báo lỗi quy tắc mật khẩu; không tạo tài khoản. |
-| REG-11 | AC1.2 | Mật khẩu có ký tự đặc biệt, không có số: QaTest!@ | 1. Dùng email mới. 2. Nhập mật khẩu và xác nhận là QaTest!@. 3. Nhập các trường khác hợp lệ. 4. Gửi form. | Chấp nhận vì mật khẩu có đủ độ dài, chữ hoa, chữ thường và ký tự đặc biệt; đăng ký thành công. |
-| REG-12 | AC1.1 | Xác nhận mật khẩu không khớp | 1. Nhập mật khẩu QaTest12. 2. Nhập xác nhận QaTest13. 3. Nhập các trường khác hợp lệ. 4. Gửi form. | Báo mật khẩu xác nhận không khớp; không tạo tài khoản. |
-| REG-13 | AC1.1 / RBAC | Cố đăng ký vai trò ADMIN | 1. Kiểm tra danh sách vai trò trên form. 2. Với endpoint đăng ký do nhóm cung cấp, gửi request thử nghiệm có role ADMIN. | Form chỉ cho chọn VOLUNTEER hoặc ORGANIZER; server không tạo tài khoản ADMIN từ request đăng ký công khai. |
+- Website hoạt động và truy cập được.
+- Có tài khoản kiểm thử cho VOLUNTEER, ORGANIZER và ADMIN.
+- Có email chưa tồn tại để kiểm thử đăng ký và đăng nhập.
+- Có đường dẫn chức năng riêng tư và API thực tế do Developer xác nhận.
+- Có thông tin thời hạn phiên và cơ chế quản lý phiên để kiểm thử Session.
+- Có quyền truy cập Vercel Preview.
 
-## 6. Test case đăng nhập
+### 4.2. Dữ liệu
 
-Điều kiện chung: Có tài khoản thử nghiệm đang kích hoạt;
-người kiểm thử chưa đăng nhập.
+| Dữ liệu | Giá trị / Cách chuẩn bị |
+| --- | --- |
+| Volunteer đã sử dụng | volunteer@test.com |
+| Organizer | Chờ Developer cung cấp tài khoản hợp lệ. |
+| Admin | Chờ Developer cung cấp tài khoản hợp lệ. |
+| Email đăng ký mới | Dùng email riêng cho từng lần chạy; xác nhận chưa tồn tại. |
+| Email chưa tồn tại đã thử | qa.nonexistent.20261004@example.com |
+| Email không hợp lệ | kien@ |
+| Mật khẩu hợp lệ mẫu | QaTest12 |
+| Mật khẩu 7 ký tự | QaTest1 |
+| Không có chữ hoa | qatest12 |
+| Không có chữ thường | QATEST12 |
+| Không có số hoặc ký tự đặc biệt | QaTestAb |
+| Có ký tự đặc biệt, không có số | QaTest!@ |
+| Mật khẩu sai đã thử | SaiMatKhau!2026 |
 
-| ID | Yêu cầu | Trường hợp | Các bước thực hiện | Kết quả mong đợi |
-|---|---|---|---|---|
-| LOG-01 | AC2.1 / AC2.3 | Volunteer đăng nhập đúng | 1. Mở Đăng nhập. 2. Nhập thông tin Volunteer hợp lệ. 3. Gửi form. | Đăng nhập thành công; chuyển về trang khám phá chiến dịch hoặc Dashboard cá nhân theo thiết kế đã chốt. |
-| LOG-02 | AC2.1 / AC2.3 | Organizer đăng nhập đúng | 1. Nhập thông tin Organizer hợp lệ. 2. Gửi form. | Đăng nhập thành công; chuyển đến trang Quản lý chiến dịch của tổ chức. |
-| LOG-03 | AC2.1 / AC2.3 | Admin đăng nhập đúng | 1. Nhập thông tin Admin hợp lệ. 2. Gửi form. | Đăng nhập thành công; chuyển đến Admin Portal. |
-| LOG-04 | AC2.4 | Sai mật khẩu | 1. Nhập email tài khoản đã có. 2. Nhập mật khẩu sai. 3. Gửi form. | Hiển thị “Email hoặc mật khẩu không chính xác”; không tạo phiên đăng nhập. |
-| LOG-05 | AC2.4 | Email chưa đăng ký | 1. Nhập email đúng định dạng nhưng chưa tồn tại. 2. Nhập mật khẩu. 3. Gửi form. | Hiển thị cùng thông báo “Email hoặc mật khẩu không chính xác”; không làm lộ việc email có tồn tại hay không. |
-| LOG-06 | Validation | Thiếu email hoặc mật khẩu | 1. Bỏ trống email rồi gửi form. 2. Bỏ trống mật khẩu rồi gửi form. 3. Bỏ trống cả hai rồi gửi form. | Báo dữ liệu bắt buộc tương ứng; không đăng nhập. |
-| LOG-07 | Validation | Email sai định dạng | 1. Nhập email kien@. 2. Nhập mật khẩu. 3. Gửi form. | Báo email không hợp lệ; không đăng nhập. |
+Không lưu mật khẩu thật, cookie hoặc token xác thực vào tài liệu hay GitHub Issue.
 
-## 7. Test case đăng xuất và phiên
+## 5. Test Cases — Register
 
-Điều kiện chung: Đã đăng nhập bằng tài khoản thử nghiệm,
-trừ trường hợp ghi rõ khác.
-
-| ID | Yêu cầu | Trường hợp | Các bước thực hiện | Kết quả mong đợi |
-|---|---|---|---|---|
-| OUT-01 | AC3.1 / AC3.2 | Đăng xuất thành công | 1. Đăng nhập. 2. Bấm Đăng xuất. 3. Quan sát trang và trạng thái xác thực. 4. Lặp lại với cả ba vai trò. | Phiên hiện tại kết thúc; chuyển về trang chủ công khai; không còn trạng thái người dùng đã đăng nhập. |
-| OUT-02 | AC3.1 / AC3.3 | Truy cập URL riêng tư sau đăng xuất | 1. Đăng nhập và mở trang riêng tư. 2. Đăng xuất. 3. Nhập lại URL trang đó. | Không truy cập được nội dung riêng tư; hệ thống yêu cầu đăng nhập. |
-| OUT-03 | AC3.3 | Bấm Back sau đăng xuất | 1. Mở trang riêng tư khi đã đăng nhập. 2. Đăng xuất. 3. Bấm Back. 4. Tải lại trang và thử thao tác được bảo vệ. | Không xem được nội dung riêng tư theo AC3.3; không lấy thêm dữ liệu hoặc thực hiện thao tác cần xác thực. Ghi rõ nếu nội dung cũ vẫn xuất hiện từ bộ nhớ trình duyệt. |
-| SES-01 | AC2.2 | Cookie phiên an toàn | 1. Đăng nhập trên Preview HTTPS. 2. Mở DevTools → Application → Cookies. 3. Kiểm tra cookie xác thực thực tế. | Nếu dùng cookie xác thực, cookie có HttpOnly và Secure; cấu hình phù hợp cơ chế xác thực đã chốt. Không đính kèm giá trị cookie vào minh chứng. |
-| SES-02 | Session Expiration | Phiên đăng nhập hết hạn | 1. Đăng nhập. 2. Chờ phiên hết hạn hoặc dùng cấu hình thời hạn ngắn do Developer chuẩn bị. 3. Mở trang riêng tư/gửi request được bảo vệ. | Hệ thống tự đăng xuất hoặc yêu cầu làm mới phiên; không cho tiếp tục truy cập bằng phiên đã hết hạn. |
-| SES-03 | AC3.1 | Sử dụng lại phiên sau đăng xuất | 1. Phối hợp Developer chuẩn bị request với thông tin phiên trước đăng xuất theo cơ chế xác thực đã chốt. 2. Đăng xuất. 3. Thử lại request đó trên môi trường thử nghiệm. | Phiên đã đăng xuất không còn được server chấp nhận theo AC3.1. Nếu cơ chế hiện tại chưa đáp ứng, ghi nhận sai lệch để nhóm xem xét; không tự đánh dấu Pass. |
-
-## 8. Test case phân quyền và truy cập trái phép
-
-Điều kiện chung: Có tài khoản theo vai trò và URL/endpoint thực tế.
-Chỉ thực hiện thao tác trên dữ liệu thử nghiệm.
-
-| ID | Căn cứ | Trường hợp | Các bước thực hiện | Kết quả mong đợi |
-|---|---|---|---|---|
-| ROLE-01 | Ma trận RBAC | Volunteer truy cập chức năng Volunteer | 1. Đăng nhập Volunteer. 2. Mở chức năng đăng ký/hủy đăng ký tham gia hoặc lịch sử cá nhân đã triển khai. | Truy cập được chức năng dành cho Volunteer. |
-| ROLE-02 | Ma trận RBAC | Organizer truy cập chức năng Organizer | 1. Đăng nhập Organizer. 2. Mở trang quản lý chiến dịch và chức năng tạo/chỉnh sửa đã triển khai. | Truy cập được chức năng dành cho Organizer. |
-| ROLE-03 | Ma trận RBAC | Admin truy cập chức năng Admin | 1. Đăng nhập Admin. 2. Mở trang quản trị và chức năng kiểm duyệt/quản lý người dùng đã triển khai. | Truy cập được chức năng dành cho Admin. |
-| ROLE-04 | Route Protection | Volunteer truy cập Admin | 1. Đăng nhập Volunteer. 2. Nhập trực tiếp URL thuộc /admin/*. | Trả về 403 hoặc chuyển đến trang báo lỗi quyền truy cập; không hiển thị dữ liệu Admin. |
-| ROLE-05 | Route Protection | Organizer truy cập Admin | 1. Đăng nhập Organizer. 2. Nhập trực tiếp URL thuộc /admin/*. | Trả về 403 hoặc chuyển đến trang báo lỗi quyền truy cập; không hiển thị dữ liệu Admin. |
-| ROLE-06 | Route Protection | Volunteer truy cập Organizer | 1. Đăng nhập Volunteer. 2. Nhập trực tiếp URL thuộc /organizer/*. | Trả về 403 hoặc chuyển đến trang báo lỗi quyền truy cập; không hiển thị dữ liệu riêng của Organizer. |
-| ROLE-07 | Authentication | Guest truy cập trang riêng tư | 1. Mở cửa sổ ẩn danh chưa đăng nhập. 2. Truy cập lần lượt trang hồ sơ, Organizer và Admin. | Không truy cập được nội dung riêng tư; chuyển đến đăng nhập hoặc phản hồi từ chối phù hợp. |
-| ROLE-08 | Ma trận RBAC | Guest xem hoạt động công khai | 1. Mở cửa sổ ẩn danh. 2. Mở danh sách hoạt động công khai. 3. Mở chi tiết một hoạt động công khai. | Xem được danh sách và chi tiết mà không phải đăng nhập. |
-| ROLE-09 | Ma trận RBAC | Volunteer gọi API dành cho Admin | 1. Đăng nhập Volunteer. 2. Gửi request đến endpoint quản trị do nhóm cung cấp. 3. Kiểm tra phản hồi và dữ liệu. | Server từ chối quyền truy cập, thông thường 403; không trả dữ liệu quản trị hoặc thực hiện thay đổi. |
-| ROLE-10 | Authentication | Guest gọi API được bảo vệ | 1. Không gửi thông tin xác thực. 2. Gọi endpoint riêng tư do nhóm cung cấp. | Server từ chối, thông thường 401; không trả dữ liệu riêng tư hoặc thực hiện thay đổi. |
-| ROLE-11 | Ma trận RBAC | Admin cố tạo chiến dịch | 1. Đăng nhập Admin. 2. Thử truy cập chức năng tạo chiến dịch và endpoint tương ứng. | Bị từ chối vì ma trận hiện tại chỉ cho Organizer tạo/chỉnh sửa chiến dịch; không tạo dữ liệu. |
-| ROLE-12 | Ma trận RBAC | Organizer cố đăng ký tham gia chiến dịch | 1. Đăng nhập Organizer. 2. Thử đăng ký tham gia một chiến dịch qua giao diện và endpoint tương ứng. | Bị từ chối vì chức năng này chỉ dành cho Volunteer; không tạo đăng ký. |
-
-## 9. Test case giao diện trên Vercel Preview
+Điều kiện chung: Người dùng chưa đăng nhập, truy cập được form đăng ký. Email đăng ký hợp lệ phải chưa tồn tại, trừ case kiểm tra email trùng.
 
 | ID | Trường hợp | Các bước thực hiện | Kết quả mong đợi |
-|---|---|---|---|
-| UI-01 | Giao diện máy tính | 1. Mở Register và Login ở kích thước 1366 × 768. 2. Kiểm tra trường nhập, nút và thông báo. | Không chồng lấn hoặc bị cắt nội dung; form sử dụng được. |
-| UI-02 | Giao diện điện thoại | 1. Mở Register và Login ở kích thước 375 × 667. 2. Nhập dữ liệu, cuộn và gửi form. | Không tràn ngang; đọc được nội dung; các trường và nút thao tác được. |
-| UI-03 | Hiển thị lỗi validation | 1. Gửi form rỗng hoặc nhập dữ liệu sai. 2. Quan sát thông báo. 3. Sửa dữ liệu và gửi lại. | Thông báo rõ ràng, liên quan đúng trường; người dùng sửa và gửi lại được. |
-| UI-04 | Điều hướng Authentication | 1. Chuyển giữa Register và Login. 2. Đăng ký hợp lệ. 3. Đăng nhập. 4. Đăng xuất. | Các liên kết hoạt động; đăng ký chuyển đến Login; đăng nhập theo Role; đăng xuất về trang chủ công khai. |
+| --- | --- | --- | --- |
+| REG-01 | Đăng ký Volunteer hợp lệ | Nhập Họ tên, Email mới, mật khẩu QaTest12 và xác nhận giống nhau; chọn VOLUNTEER; gửi form. | Tạo tài khoản Volunteer được kích hoạt mặc định; thông báo thành công; chuyển đến Đăng nhập. |
+| REG-02 | Đăng ký Organizer hợp lệ | Điền đầy đủ dữ liệu hợp lệ; chọn ORGANIZER; gửi form. | Tạo tài khoản Organizer được kích hoạt mặc định; thông báo thành công; chuyển đến Đăng nhập. |
+| REG-03 | Thiếu dữ liệu bắt buộc | Lần lượt bỏ trống từng trường Họ tên, Email, Mật khẩu, Xác nhận mật khẩu và Role; gửi form mỗi lần. | Báo lỗi phù hợp tại trường thiếu; không tạo tài khoản. |
+| REG-04 | Email không hợp lệ | Nhập email kien@ cùng các trường còn lại hợp lệ; gửi form. | Báo lỗi định dạng email; không tạo tài khoản. |
+| REG-05 | Email đã tồn tại | Dùng email của tài khoản đã tồn tại; điền các trường còn lại hợp lệ; gửi form. | Từ chối email trùng; không tạo thêm tài khoản. |
+| REG-06 | Mật khẩu dưới 8 ký tự | Nhập QaTest1 và xác nhận giống nhau; gửi form với dữ liệu khác hợp lệ. | Báo lỗi độ dài mật khẩu; không tạo tài khoản. |
+| REG-07 | Mật khẩu đúng 8 ký tự | Nhập QaTest12 và xác nhận giống nhau; gửi form với email mới và dữ liệu hợp lệ. | Chấp nhận mật khẩu đạt yêu cầu; đăng ký thành công. |
+| REG-08 | Mật khẩu thiếu chữ hoa | Nhập qatest12 và xác nhận giống nhau; gửi form. | Báo lỗi yêu cầu chữ hoa; không tạo tài khoản. |
+| REG-09 | Mật khẩu thiếu chữ thường | Nhập QATEST12 và xác nhận giống nhau; gửi form. | Báo lỗi yêu cầu chữ thường; không tạo tài khoản. |
+| REG-10 | Mật khẩu thiếu số và ký tự đặc biệt | Nhập QaTestAb và xác nhận giống nhau; gửi form. | Báo lỗi yêu cầu ít nhất một số hoặc ký tự đặc biệt; không tạo tài khoản. |
+| REG-11 | Mật khẩu có ký tự đặc biệt, không có số | Nhập QaTest!@ và xác nhận giống nhau; dùng email mới; gửi form. | Chấp nhận mật khẩu vì đạt độ dài, có chữ hoa, chữ thường và ký tự đặc biệt. |
+| REG-12 | Xác nhận mật khẩu không khớp | Nhập hai giá trị mật khẩu khác nhau; gửi form. | Báo lỗi xác nhận mật khẩu; không tạo tài khoản. |
+| REG-13 | Guest không được tự đăng ký Admin | Kiểm tra lựa chọn Role trên UI; gửi yêu cầu đăng ký với role ADMIN qua endpoint thực tế do Developer xác nhận. | UI chỉ cho chọn VOLUNTEER/ORGANIZER; server từ chối ADMIN; không tạo tài khoản Admin. |
 
-## 10. Bảng ghi nhận thực thi
+## 6. Test Cases — Login
 
-Cập nhật kết quả thực tế, trạng thái và minh chứng sau mỗi lần kiểm thử.
-Nếu kiểm thử lại, thêm dòng cho lần chạy mới để giữ lịch sử.
+Điều kiện chung: Người dùng chưa đăng nhập. Các tài khoản hợp lệ được Developer cung cấp hoặc đã tạo thành công.
 
-| ID | Ngày / Lần chạy | Kết quả thực tế | Trạng thái | Minh chứng | Bug Issue / Lý do Blocked |
-|---|---|---|---|---|---|
-| REG-01 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-02 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-03 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-04 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-05 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-06 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-07 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-08 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-09 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-10 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-11 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-12 | — | Chưa kiểm thử | Not Run | — | — |
-| REG-13 | — | Chưa kiểm thử | Not Run | — | — |
-| LOG-01 | — | Chưa kiểm thử | Not Run | — | — |
-| LOG-02 | — | Chưa kiểm thử | Not Run | — | — |
-| LOG-03 | — | Chưa kiểm thử | Not Run | — | — |
-| LOG-04 | — | Chưa kiểm thử | Not Run | — | — |
-| LOG-05 | — | Chưa kiểm thử | Not Run | — | — |
-| LOG-06 | — | Chưa kiểm thử | Not Run | — | — |
-| LOG-07 | — | Chưa kiểm thử | Not Run | — | — |
-| OUT-01 | — | Chưa kiểm thử | Not Run | — | — |
-| OUT-02 | — | Chưa kiểm thử | Not Run | — | — |
-| OUT-03 | — | Chưa kiểm thử | Not Run | — | — |
-| SES-01 | — | Chưa kiểm thử | Not Run | — | — |
-| SES-02 | — | Chưa kiểm thử | Not Run | — | — |
-| SES-03 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-01 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-02 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-03 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-04 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-05 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-06 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-07 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-08 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-09 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-10 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-11 | — | Chưa kiểm thử | Not Run | — | — |
-| ROLE-12 | — | Chưa kiểm thử | Not Run | — | — |
-| UI-01 | — | Chưa kiểm thử | Not Run | — | — |
-| UI-02 | — | Chưa kiểm thử | Not Run | — | — |
-| UI-03 | — | Chưa kiểm thử | Not Run | — | — |
-| UI-04 | — | Chưa kiểm thử | Not Run | — | — |
+| ID | Trường hợp | Các bước thực hiện | Kết quả mong đợi |
+| --- | --- | --- | --- |
+| LOG-01 | Volunteer đăng nhập đúng | Nhập email và mật khẩu Volunteer hợp lệ; gửi form; kiểm tra Role và URL sau đăng nhập. | Đăng nhập thành công; đúng role VOLUNTEER; đến trang khám phá hoạt động hoặc Dashboard cá nhân theo AC2.3. |
+| LOG-02 | Organizer đăng nhập đúng | Nhập tài khoản Organizer hợp lệ; gửi form; kiểm tra Role và URL. | Đăng nhập thành công; đúng role ORGANIZER; đến trang quản lý chiến dịch của tổ chức. |
+| LOG-03 | Admin đăng nhập đúng | Nhập tài khoản Admin hợp lệ; gửi form; kiểm tra Role và URL. | Đăng nhập thành công; đúng role ADMIN; đến trang quản trị. |
+| LOG-04 | Sai mật khẩu | Nhập email tồn tại và mật khẩu sai; gửi form. | Không đăng nhập; hiển thị “Email hoặc mật khẩu không chính xác” theo AC2.4. |
+| LOG-05 | Email chưa tồn tại | Nhập email chưa tồn tại và mật khẩu bất kỳ không trống; gửi form. | Không đăng nhập; hiển thị cùng lỗi chung như LOG-04, không tiết lộ email có tồn tại hay không. |
+| LOG-06 | Thiếu trường bắt buộc | Thử cả hai trường trống, chỉ email trống và chỉ mật khẩu trống; gửi form mỗi lần. | Báo trường bắt buộc và chặn đăng nhập. |
+| LOG-07 | Email không hợp lệ | Nhập kien@ và mật khẩu không trống; gửi form. | Báo lỗi định dạng email; chặn gửi form đăng nhập. |
 
-## 11. Điểm cần xác nhận với nhóm
+## 7. Test Cases — Logout
 
-- Ma trận gộp Login/Logout/Đổi mật khẩu và đánh dấu Guest được phép.
-  Cần tách rõ: Guest có thể đăng nhập; đăng xuất và đổi mật khẩu
-  cần điều kiện xác thực phù hợp.
-- Xác nhận URL điều hướng chính xác cho Volunteer vì AC2.3
-  đang cho phép trang khám phá hoặc Dashboard cá nhân.
-- Xác nhận cơ chế phiên, thời hạn phiên và cách hủy phiên phía server.
-- Những chức năng nghiệp vụ chưa triển khai trong Sprint 1:
-  ghi Blocked cho test case liên quan và nêu rõ phần phụ thuộc.
+Điều kiện chung: Đã đăng nhập thành công. Thực hiện với từng Role khi có tài khoản phù hợp.
 
-## 12. Ghi nhận lỗi và kiểm thử lại
+| ID | Trường hợp | Các bước thực hiện | Kết quả mong đợi |
+| --- | --- | --- | --- |
+| OUT-01 | Đăng xuất thành công | Đăng nhập; bấm Đăng xuất; kiểm tra URL, trạng thái UI và phiên xác thực. Lặp lại với Volunteer, Organizer, Admin. | Kết thúc phiên theo cơ chế hệ thống; về trang chủ công khai theo AC3.2; không còn trạng thái đăng nhập. |
+| OUT-02 | Truy cập lại route riêng tư sau đăng xuất | Đăng xuất; nhập trực tiếp một route riêng tư đã xác nhận, ví dụ /admin. | Yêu cầu đăng nhập hoặc chuyển về /login; không hiển thị nội dung riêng tư. |
+| OUT-03 | Bấm Back sau đăng xuất | Mở trang riêng tư khi đăng nhập; đăng xuất; bấm Back; kiểm tra nội dung; tải lại và thử thao tác cần xác thực. | Không truy cập được nội dung hoặc thao tác riêng tư sau đăng xuất; không khôi phục phiên từ lịch sử trình duyệt. |
 
-- Test case Fail phải có mô tả kết quả thực tế và minh chứng.
-- Tạo GitHub Bug Issue cho lỗi đã xác minh.
-- Liên kết Bug Issue với test case và Issue #12.
-- Sau khi Developer sửa, kiểm thử lại trên Preview của commit mới.
-- Ghi kết quả kiểm thử lại và cập nhật trạng thái Bug Issue.
+## 8. Test Cases — Session
+
+Điều kiện chung: Developer xác nhận cơ chế phiên, thời hạn phiên và cách kiểm thử phù hợp. Thực hiện trên môi trường kiểm thử được cấp quyền.
+
+| ID | Trường hợp | Các bước thực hiện | Kết quả mong đợi |
+| --- | --- | --- | --- |
+| SES-01 | Cookie xác thực an toàn | Nếu dùng cookie xác thực, đăng nhập trên HTTPS; kiểm tra thuộc tính cookie bằng DevTools. | Cookie xác thực có HttpOnly và Secure; cấu hình phù hợp cơ chế phiên đã thống nhất. |
+| SES-02 | Phiên hết hạn | Đăng nhập; để phiên hết hạn theo cấu hình hoặc dùng thời hạn rút ngắn trên môi trường test; truy cập route riêng tư. | Tự đăng xuất hoặc yêu cầu làm mới phiên; phiên hết hạn không cấp quyền truy cập. |
+| SES-03 | Sử dụng lại phiên sau đăng xuất | Trên môi trường test, kiểm tra yêu cầu riêng tư dùng thông tin phiên trước đăng xuất theo hướng dẫn Developer. | Phiên cũ bị từ chối theo AC3.1. Nếu dùng JWT không có cơ chế thu hồi, ghi nhận sai khác và yêu cầu làm rõ AC; không tự đánh dấu Pass. |
+
+Không đưa giá trị cookie/token vào ảnh hoặc báo cáo công khai.
+
+## 9. Test Cases — Role / Permission
+
+Điều kiện chung: Có tài khoản đúng Role, route và API thực tế. Nếu chức năng chưa triển khai thì ghi Blocked, không dùng trang 404 làm bằng chứng phân quyền.
+
+| ID | Trường hợp | Các bước thực hiện | Kết quả mong đợi |
+| --- | --- | --- | --- |
+| ROLE-01 | Volunteer dùng chức năng được phép | Đăng nhập Volunteer; mở chức năng dành cho Volunteer; thực hiện thao tác phù hợp bằng dữ liệu test. | Truy cập và sử dụng được chức năng Volunteer theo ma trận quyền. |
+| ROLE-02 | Organizer dùng chức năng được phép | Đăng nhập Organizer; mở quản lý chiến dịch; thực hiện thao tác phù hợp bằng dữ liệu test. | Truy cập và sử dụng được chức năng Organizer theo ma trận quyền. |
+| ROLE-03 | Admin dùng chức năng được phép | Đăng nhập Admin; mở trang quản trị và chức năng kiểm duyệt đã triển khai. | Truy cập và sử dụng được chức năng Admin theo ma trận quyền. |
+| ROLE-04 | Volunteer truy cập Admin | Đăng nhập Volunteer; nhập trực tiếp /admin. | Bị từ chối bằng 403 hoặc trang thông báo không có quyền; không thấy nội dung quản trị. |
+| ROLE-05 | Organizer truy cập Admin | Đăng nhập Organizer; nhập trực tiếp route Admin. | Bị từ chối; không thấy nội dung quản trị. |
+| ROLE-06 | Volunteer truy cập chức năng Organizer | Đăng nhập Volunteer; mở trực tiếp route Organizer đã xác nhận. | Bị từ chối; không sử dụng được chức năng Organizer. |
+| ROLE-07 | Guest truy cập route riêng tư | Khi chưa đăng nhập, mở trực tiếp các route riêng tư đã xác nhận. | Yêu cầu đăng nhập; không thấy nội dung riêng tư. |
+| ROLE-08 | Guest xem hoạt động công khai | Khi chưa đăng nhập, mở danh sách và chi tiết hoạt động công khai. | Xem được nội dung công khai; không bị bắt đăng nhập chỉ để xem. |
+| ROLE-09 | Volunteer gọi API Admin | Đăng nhập Volunteer; gửi yêu cầu đến API Admin thực tế bằng dữ liệu test. | API từ chối quyền truy cập, thường là 403; không trả dữ liệu Admin hoặc thực hiện thao tác. |
+| ROLE-10 | Guest gọi API cần xác thực | Khi chưa đăng nhập, gửi yêu cầu đến API riêng tư thực tế. | API từ chối, thường là 401; không trả dữ liệu riêng tư hoặc thực hiện thao tác. |
+| ROLE-11 | Admin tạo chiến dịch | Đăng nhập Admin; thử chức năng và API tạo chiến dịch thực tế. | Bị từ chối theo ma trận yêu cầu hiện tại: tạo chiến dịch dành cho Organizer. |
+| ROLE-12 | Organizer đăng ký tham gia chiến dịch | Đăng nhập Organizer; thử chức năng và API đăng ký tham gia. | Bị từ chối theo ma trận yêu cầu hiện tại: đăng ký tham gia dành cho Volunteer. |
+
+Nếu Product thay đổi ma trận quyền, cập nhật yêu cầu và test case trước khi đánh giá kết quả.
+
+## 10. Test Cases — UI
+
+| ID | Trường hợp | Các bước thực hiện | Kết quả mong đợi |
+| --- | --- | --- | --- |
+| UI-01 | Giao diện máy tính | Đặt viewport 1366 × 768; kiểm tra Register/Login và thông báo lỗi. | Nội dung rõ ràng, không chồng lấn hoặc bị cắt; các trường và nút thao tác được. |
+| UI-02 | Giao diện điện thoại | Đặt viewport 375 × 667; kiểm tra Register/Login và cuộn trang. | Form dùng được; không tràn ngang; nội dung và nút truy cập được. |
+| UI-03 | Sửa dữ liệu sau lỗi | Gửi form với dữ liệu sai; sửa thành hợp lệ; gửi lại. | Validation được đánh giá lại; lỗi cũ không cản thao tác khi dữ liệu đã hợp lệ. |
+| UI-04 | Điều hướng Authentication | Kiểm tra các liên kết đăng ký, đăng nhập và nút đăng xuất ở trạng thái phù hợp. | Liên kết hoạt động đúng; trạng thái UI phù hợp trạng thái đăng nhập và yêu cầu nghiệp vụ. |
+
+## 11. Kết quả kiểm thử đợt 1
+
+### 11.1. Môi trường và giới hạn
+
+- Ngày: 04/10/2026.
+- Website: https://volunteer-community-platform.vercel.app
+- Tài khoản đã sử dụng: volunteer@test.com, role VOLUNTEER.
+- Chưa xác minh commit của bản Production.
+- Đã kiểm tra code đăng nhập do người kiểm thử sao chép từ nhánh main.
+- Chưa kiểm thử Vercel Preview do đang chờ cấp quyền.
+- Validation quan sát được là validation giao diện/trình duyệt; chưa xác minh validation phía server.
+
+### 11.2. Bảng kết quả
+
+| Test ID | Trạng thái | Kết quả thực tế / Phần còn thiếu |
+| --- | --- | --- |
+| REG-01 đến REG-13 | Blocked | Chưa tìm thấy giao diện đăng ký. src/app trên main không có register; login/page.tsx không có form hoặc liên kết đăng ký. Theo dõi #38. |
+| LOG-01 | In Progress | Đăng nhập thành công bằng volunteer@test.com; hiển thị Volunteer Test và role VOLUNTEER. Chưa xác minh đầy đủ URL và điều hướng theo AC2.3. |
+| LOG-02 | Not Run | Chưa thực hiện với tài khoản Organizer. |
+| LOG-03 | Not Run | Chưa thực hiện với tài khoản Admin. |
+| LOG-04 | Fail | Sai mật khẩu bị từ chối. Hiển thị “Email hoặc mật khẩu không đúng.”, khác nguyên văn AC2.4 “Email hoặc mật khẩu không chính xác”. Hành vi từ chối đạt; câu thông báo cần xác nhận. |
+| LOG-05 | Fail | Email qa.nonexistent.20261004@example.com bị từ chối với cùng thông báo như LOG-04. Không tiết lộ sự tồn tại tài khoản qua câu thông báo; nội dung khác nguyên văn AC2.4. |
+| LOG-06 | Pass | Thử cả hai trường trống, email trống và mật khẩu trống. Trình duyệt hiển thị “Vui lòng điền vào ô này.” tại trường bắt buộc và chặn gửi form. |
+| LOG-07 | Pass | Email kien@ bị trình duyệt báo thiếu phần sau @ và chặn gửi form. |
+| OUT-01 | Fail | Sau thao tác đăng xuất, về /login thay vì trang chủ công khai theo AC3.2. Chưa xác minh toàn bộ việc hủy phiên client/server; chưa lặp lại với Organizer/Admin. |
+| OUT-02 | Pass | Sau đăng xuất, truy cập lại /admin bị chuyển về /login; không hiển thị nội dung quản trị. |
+| OUT-03 | Not Run | Chưa thực hiện đầy đủ kiểm tra Back, tải lại và thao tác riêng tư. |
+| SES-01 | Not Run | Chưa kiểm tra thuộc tính cookie. |
+| SES-02 | Not Run | Chưa kiểm tra phiên hết hạn. |
+| SES-03 | Not Run | Chưa kiểm tra sử dụng lại phiên sau đăng xuất. |
+| ROLE-01 | Not Run | Chưa thực hiện đầy đủ chức năng Volunteer. |
+| ROLE-02 | Not Run | Chưa thực hiện chức năng Organizer. |
+| ROLE-03 | Not Run | Chưa thực hiện chức năng Admin. |
+| ROLE-04 | Pass | Volunteer truy cập /admin thấy “Không có quyền truy cập” và role VOLUNTEER; không thấy nội dung quản trị. Chưa xác minh HTTP status. |
+| ROLE-05 | Not Run | Chưa thực hiện. |
+| ROLE-06 | Not Run | Chưa thực hiện. |
+| ROLE-07 | Not Run | Chưa chạy riêng đầy đủ các route với Guest; OUT-02 mới xác minh /admin sau đăng xuất. |
+| ROLE-08 | In Progress | Đã quan sát danh sách hoạt động công khai khi UI hiển thị nút Đăng nhập; chưa xác minh đầy đủ URL và trang chi tiết. |
+| ROLE-09 | Not Run | Chưa kiểm tra API Admin với Volunteer. |
+| ROLE-10 | Not Run | Chưa kiểm tra API riêng tư với Guest. |
+| ROLE-11 | Not Run | Chưa thực hiện. |
+| ROLE-12 | Not Run | Chưa thực hiện. |
+| UI-01 | Not Run | Chưa kiểm tra có kiểm soát tại viewport 1366 × 768. |
+| UI-02 | Not Run | Chưa kiểm tra viewport điện thoại. |
+| UI-03 | Not Run | Chưa thực hiện đầy đủ. |
+| UI-04 | Not Run | Chưa thực hiện đầy đủ; thiếu giao diện đăng ký đang theo dõi #38. |
+
+Trạng thái Fail của LOG-04/LOG-05 dựa trên yêu cầu câu thông báo nguyên văn hiện tại. Nếu Product chấp nhận thông báo tương đương, cần ghi lại quyết định và cập nhật Expected Result trước khi đánh giá lại.
+
+## 12. Bằng chứng kiểm thử
+
+Các ảnh dưới đây đã được thu thập trong quá trình kiểm thử. Cần đính kèm vào repository hoặc GitHub Issue và bổ sung liên kết; tên ảnh không phải liên kết bằng chứng.
+
+| Nội dung | Tên ảnh | Liên kết |
+| --- | --- | --- |
+| Volunteer đăng nhập thành công | image(20261004-103859).png | Chưa bổ sung |
+| Volunteer bị từ chối truy cập Admin | image(20261004-104030).png | Chưa bổ sung |
+| Trang login sau thao tác đăng xuất | image(20261004-104338).png | Chưa bổ sung |
+| Truy cập lại Admin sau đăng xuất | image(20261004-110135).png | Chưa bổ sung |
+| Đăng nhập sai mật khẩu | image(20261004-110627).png | Chưa bổ sung |
+| Đăng nhập email chưa tồn tại | image(20261004-110800).png | Chưa bổ sung |
+| Danh sách src/app trên main | image(20261004-111921).png | Chưa bổ sung |
+| Code login/page.tsx | image(20261004-112217).png | Chưa bổ sung |
+
+## 13. Vấn đề và Bug Issue
+
+| Vấn đề | Trạng thái | Issue |
+| --- | --- | --- |
+| Chưa tìm thấy giao diện đăng ký tài khoản theo US-01 | Đã tạo Issue; chờ Developer xác nhận nhánh/đường dẫn hoặc bổ sung chức năng. | https://github.com/nguyentuansangit-prog/volunteer-community-platform/issues/38 |
+| Đăng xuất chuyển về /login thay vì trang chủ công khai theo AC3.2 | Đã ghi nhận; chưa tạo Bug Issue. | Chưa có |
+| Câu thông báo đăng nhập khác nguyên văn AC2.4 | Đã ghi nhận; cần Product/Developer xác nhận và tạo Issue theo dõi. | Chưa có |
+| Chưa có quyền truy cập Vercel Preview | Blocked; chờ chủ dự án cấp quyền. | Theo dõi trong #12 |
+
+Không ghi nhận Vercel Deployment Protection là lỗi Authentication của ứng dụng.
+
+### Thông tin cần có khi tạo Bug Issue
+
+- Tiêu đề mô tả rõ lỗi.
+- Môi trường và URL.
+- Branch/Commit nếu đã xác minh.
+- Điều kiện trước khi kiểm thử.
+- Các bước tái hiện.
+- Kết quả mong đợi và thực tế.
+- Ảnh hoặc video bằng chứng.
+- Test ID và Acceptance Criteria liên quan.
+- Liên kết về Issue #12.
+
+## 14. Kiểm thử Vercel Preview
+
+Trạng thái hiện tại: Blocked — đang chờ cấp quyền truy cập.
+
+Khi được cấp quyền:
+
+1. Ghi nhận URL Preview, branch và commit của deployment.
+2. Xác nhận tài khoản và dữ liệu kiểm thử.
+3. Chạy các case Authentication, validation, Role/Permission và Unauthorized.
+4. Kiểm tra giao diện máy tính và điện thoại.
+5. Ghi kết quả Preview riêng với Production.
+6. Tạo Bug Issue cho lỗi phát hiện và liên kết bằng chứng.
+7. Kiểm thử lại sau khi Developer sửa lỗi.
+
+Không đánh dấu Acceptance Criteria “Vercel Preview đã được kiểm thử” khi chỉ chạy trên Production.
+
+## 15. Công việc còn lại của Issue #12
+
+- [x] Viết test case Register/Login/Logout.
+- [x] Viết test case validation.
+- [x] Viết test case Role/Permission.
+- [x] Viết Unauthorized Case.
+- [x] Thực hiện một phần kiểm thử trên Production.
+- [x] Tạo Issue #38 theo dõi giao diện đăng ký còn thiếu.
+- [ ] Tạo Bug Issue cho điều hướng sau đăng xuất.
+- [ ] Ghi nhận và xác nhận sai khác thông báo đăng nhập.
+- [ ] Xác minh commit của bản đang kiểm thử.
+- [ ] Hoàn tất kiểm thử các Role và case còn lại.
+- [ ] Kiểm thử Vercel Preview.
+- [ ] Bổ sung liên kết bằng chứng.
+- [ ] Cập nhật hướng dẫn chạy project dựa trên README, package.json và cấu hình thực tế.
+- [ ] Kiểm thử lại các lỗi sau khi sửa.
+- [ ] Tạo Pull Request tài liệu, liên kết Issue #12 và yêu cầu review.
+
+Issue #12 chưa đủ điều kiện hoàn tất tại thời điểm báo cáo này.
