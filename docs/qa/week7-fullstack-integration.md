@@ -31,5 +31,4 @@ Manual QA accounts in the isolated database: admin@week7.test, organizer@week7.t
 ## Merge gate
 This is an integration review/Preview branch. PR #39, #41 and the integration PR remain unmerged until team QA passes. Issue #35's original completion checkboxes are not evidence that the old PR #37 connected to the new APIs.
 
-Pending: explicit permission to send the generated QA password to Vercel Preview, then branch environment setup, remote migration/deployment and authenticated Preview QA. Until then the integration Preview is not approved for manual writes because it may still use the shared database.
-
+Preview environment setup authorized by the requester and configured on 2026-10-04. Both QA_DATABASE_NAME and sensitive QA_SEED_PASSWORD are scoped only to integration/week7-fullstack-preview. Pending: deployment with these variables, remote migration and authenticated Preview QA. Do not use an older deployment for manual writes.
