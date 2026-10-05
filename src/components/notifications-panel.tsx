@@ -27,8 +27,19 @@ export default function NotificationsPanel() {
     } catch (e) { setError(e instanceof Error ? e.message : "Không thể đánh dấu đã đọc."); }
     finally { setBusy(false); }
   }
+  async function markPageRead() {
+    if (busy || !data) return;
+    setBusy(true); setError("");
+    try {
+      for (const notification of data.items.filter(item => !item.isRead)) {
+        const saved = await clientApi<Notification>(`/api/notifications/${notification.id}/read`, { method: "PATCH" });
+        setData(current => current && ({ ...current, items: current.items.map(item => item.id === saved.id ? saved : item) }));
+      }
+    } catch (e) { setError(e instanceof Error ? e.message : "Một số thông báo chưa được cập nhật. Vui lòng thử lại."); }
+    finally { setBusy(false); }
+  }
   return <section className="mt-6 space-y-4">
-    <button disabled={loading || busy} className="rounded-xl border px-4 py-2 disabled:opacity-50" onClick={() => { setLoading(true); setVersion((n) => n + 1); }}>Tải lại thông báo</button>
+    <div className="flex flex-wrap gap-3"><button disabled={loading || busy} className="rounded-xl border px-4 py-2 disabled:opacity-50" onClick={() => { setLoading(true); setVersion((n) => n + 1); }}>Tải lại thông báo</button><button disabled={loading || busy || !data?.items.some(item => !item.isRead)} onClick={() => void markPageRead()} className="rounded-xl bg-emerald-50 px-4 py-2 font-bold text-emerald-700 disabled:opacity-50">Đánh dấu trang này đã đọc</button></div>
     {error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-700">{error}</p>}
     {loading ? <p role="status">Đang tải thông báo…</p> : data && <>
       {data.items.length === 0 ? <p className="rounded-2xl border border-slate-200 bg-white p-8 text-slate-600">Chưa có thông báo nào.</p> : data.items.map((item) => <article key={item.id} className={`rounded-2xl border p-5 ${item.isRead ? "border-slate-200 bg-white" : "border-emerald-200 bg-emerald-50"}`}>

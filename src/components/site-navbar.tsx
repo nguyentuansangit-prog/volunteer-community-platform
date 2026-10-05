@@ -12,9 +12,9 @@ const linkStyle = "rounded-xl px-3 py-2 text-sm font-medium text-slate-700 trans
 export default function SiteNavbar({ user }: { user: User | null }) {
   const [open, setOpen] = useState(false);
   const links = [{ href: "/", label: "Trang chủ" }, { href: "/activities", label: "Hoạt động" }];
-  if (user?.role === "VOLUNTEER") links.push({ href: "/activities?scope=mine", label: "Đăng ký của tôi" });
+  if (user?.role === "VOLUNTEER") links.push({ href: "/my-registrations", label: "Đăng ký của tôi" });
   if (user?.role === "ORGANIZER") links.push({ href: "/activities?scope=managed", label: "Quản lý hoạt động" });
-  if (user?.role === "ORGANIZER") links.push({ href: "/organizer/dashboard", label: "Dashboard" });
+  if (user?.role === "ORGANIZER") links.push({ href: "/organizer/dashboard", label: "Dashboard" }, { href: "/organizer/registrations", label: "Người đăng ký" });
   if (user?.role === "ADMIN") links.push({ href: "/admin", label: "Quản trị" });
   if (user) links.push({ href: "/notifications", label: "Thông báo" }, { href: "/profile", label: "Tài khoản" });
   const navigation = (mobile: boolean) => <>

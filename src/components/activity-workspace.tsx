@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 type User = { id: string; name: string; role: "VOLUNTEER" | "ORGANIZER" | "ADMIN" };
@@ -42,7 +43,7 @@ const errors: Record<string, string> = {
   CONFLICT: "Dữ liệu đã thay đổi. Vui lòng kiểm tra lại trước khi thử lại.",
   INTERNAL_ERROR: "Không thể tải hoặc lưu dữ liệu. Vui lòng thử lại sau.",
 };
-const primary = "rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50";
+const primary = "rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50";
 const secondary = "rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
 const field = "mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900";
 const dateLabel = (value: string) => new Date(value).toLocaleString("vi-VN");
@@ -223,8 +224,8 @@ export default function ActivityWorkspace({ user, initialTab = "public" }: { use
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-8">
       <div className="mb-8 max-w-2xl">
         <p className="mb-2 text-sm font-semibold text-emerald-700">Cộng đồng tình nguyện</p>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Hoạt động tình nguyện</h1>
-        <p className="mt-3 text-slate-600">Lựa chọn hoạt động phù hợp và cùng chung tay tạo nên những giá trị tốt đẹp cho cộng đồng.</p>
+        <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{tab === "mine" ? "Đăng ký của tôi" : tab === "managed" ? "Quản lý hoạt động" : "Khám phá hoạt động"}</h1>
+        <p className="mt-3 text-slate-600">{tab === "mine" ? "Theo dõi trạng thái, xem lịch sử và quản lý các hoạt động bạn đã đăng ký." : "Lựa chọn hoạt động phù hợp và cùng chung tay tạo nên những giá trị tốt đẹp cho cộng đồng."}</p>
       </div>
       {tab !== "mine" && <form className="mb-6 grid gap-3 rounded-2xl border border-slate-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-4" onSubmit={(event) => {
         event.preventDefault();
@@ -242,7 +243,7 @@ export default function ActivityWorkspace({ user, initialTab = "public" }: { use
           {([["public", "Khám phá"], ...(user ? [["mine", "Đăng ký của tôi"]] : []), ...(canManage ? [["managed", "Quản lý hoạt động"]] : [])] as [Tab, string][]).map(([key, label]) =>
             <button key={key} aria-pressed={tab === key} disabled={busy} onClick={() => switchTab(key)} className={tab === key ? primary : secondary}>{label}</button>)}
         </nav>
-        {canManage && <button className={primary} disabled={busy || loading || loadFailed || !categories.length} onClick={() => { setEditor("new"); setParticipants(null); }}>Tạo hoạt động</button>}
+        {canManage && <Link className={primary} href="/activities/create">Tạo hoạt động</Link>}
       </div>
       {notice && <div role={notice.error ? "alert" : "status"} className={`mb-6 rounded-xl border p-4 ${notice.error ? "border-red-200 bg-red-50 text-red-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>{notice.message}</div>}
       {confirmation && <section role="alertdialog" aria-modal="false" aria-labelledby="confirm-title" aria-describedby="confirm-description" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5">
@@ -311,10 +312,10 @@ export default function ActivityWorkspace({ user, initialTab = "public" }: { use
               const mine = registrations.find((registration) => registration.activityId === activity.id);
               const future = new Date(activity.startDate).getTime() > now;
               const full = activity._count.registrations >= activity.maxParticipants;
-              return <article key={activity.id} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              return <article key={activity.id} className="group flex flex-col overflow-hidden rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"><Link href={`/activities/${activity.id}`} className="relative -mx-5 -mt-5 mb-5 block h-48 overflow-hidden bg-emerald-50" aria-label={`Xem chi tiết ${activity.title}`}><Image src="https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?auto=format&fit=crop&w=800&q=80" alt="" fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw" className="object-cover transition duration-500 group-hover:scale-105" /><span className="absolute right-3 top-3 rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white">{labels[activity.status]}</span></Link>
                 <div className="mb-3 flex flex-wrap gap-2 text-xs font-semibold"><span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-800">{activity.category.name}</span><span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">{labels[activity.status]}</span></div>
-                <h2 className="text-xl font-bold">{activity.title}</h2>
-                <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-600">{activity.description}</p>
+                <h2 className="text-xl font-bold"><Link href={`/activities/${activity.id}`} className="hover:text-emerald-700">{activity.title}</Link></h2>
+                <p className="mt-3 line-clamp-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-600">{activity.description}</p>
                 <dl className="my-4 space-y-2 text-sm"><div><dt className="font-semibold">Địa điểm</dt><dd>{activity.location}</dd></div><div><dt className="font-semibold">Thời gian</dt><dd>{dateLabel(activity.startDate)} – {dateLabel(activity.endDate)}</dd></div><div><dt className="font-semibold">Số người đã duyệt</dt><dd>{activity._count.registrations}/{activity.maxParticipants}{full ? " · Đã đủ chỗ" : ""}</dd></div></dl>
                 <div className="mt-auto space-y-3 border-t border-slate-100 pt-4">
                   {tab === "public" && (!user ? <Link href="/login" className={primary + " inline-block"}>Đăng nhập để đăng ký</Link> : mine ?
@@ -322,7 +323,7 @@ export default function ActivityWorkspace({ user, initialTab = "public" }: { use
                     <button className={primary} disabled={busy || full || !future} onClick={() => void mutate(`/api/activities/${activity.id}/registrations`, "POST", undefined, "Đã gửi đăng ký. Vui lòng chờ nhà tổ chức duyệt.")}>{!future ? "Đã hết hạn đăng ký" : full ? "Đã đủ chỗ" : "Đăng ký tham gia"}</button>)}
                   {tab === "managed" && <>
                     <div className="flex flex-wrap gap-2">
-                      {["DRAFT", "REJECTED"].includes(activity.status) && <button disabled={busy} className={secondary} onClick={() => { setEditor(activity); setParticipants(null); }}>Chỉnh sửa</button>}
+                      {["DRAFT", "REJECTED"].includes(activity.status) && <Link className={secondary} href={`/activities/${activity.id}/edit`}>Chỉnh sửa</Link>}
                       <button disabled={busy} className={secondary} onClick={() => void openParticipants(activity)}>Người đăng ký</button>
                       <Link href={`/activities/${activity.id}/attendance`} className={secondary}>Điểm danh</Link>
                       {["DRAFT", "PENDING", "REJECTED"].includes(activity.status) && <button disabled={busy} className={secondary} onClick={() => {

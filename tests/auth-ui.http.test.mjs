@@ -41,7 +41,11 @@ test("integrated auth UI uses real credentials, server roles, protected profiles
       const profile = await (await request("/profile")).text();
       assert.ok(profile.includes(email)); assert.equal(profile.includes(hash), false);
       const workspace = await (await request(destination)).text();
-      assert.ok(workspace.includes(role === "ADMIN" ? "Admin Dashboard" : "Hoạt động tình nguyện"));
+      assert.ok(workspace.includes(role === "ADMIN" ? "Admin Dashboard" : role === "ORGANIZER" ? "Quản lý hoạt động" : "Khám phá hoạt động"));
+      const createPage = await (await request("/activities/create")).text();
+      assert.ok(createPage.includes(role === "VOLUNTEER" ? "Không có quyền truy cập" : "Tạo hoạt động mới"));
+      const registrationPage = await (await request("/organizer/registrations")).text();
+      assert.ok(registrationPage.includes(role === "VOLUNTEER" ? "Không có quyền truy cập" : "Quản lý người đăng ký"));
       if (role === "ORGANIZER") assert.match(workspace, /aria-pressed="true"[^>]*>Quản lý hoạt động/);
       await db.query('UPDATE "User" SET "role"=$1 WHERE "id"=$2', ["VOLUNTEER", id]);
       assert.equal((await request("/login-success")).headers.get("location"), "/activities");
