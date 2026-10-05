@@ -87,7 +87,7 @@ export async function organizerDashboard(actor: Actor) {
 
 export async function adminDashboard(actor: Actor) {
   requireRule(actor.role === "ADMIN", 403, "FORBIDDEN", "Admin role required");
-  const [totalActivities, activitiesByStatus, totalRegistrations, registrationsByStatus, attendedVolunteers, hours] =
+  const [totalActivities, activitiesByStatus, totalRegistrations, registrationsByStatus, attendedVolunteers, hours, totalVolunteers] =
     await Promise.all([
       prisma.activity.count(),
       prisma.activity.groupBy({ by: ["status"], _count: { _all: true } }),
@@ -95,9 +95,11 @@ export async function adminDashboard(actor: Actor) {
       prisma.registration.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.attendance.count({ where: { status: "ATTENDED" } }),
       prisma.attendance.aggregate({ where: { status: "ATTENDED" }, _sum: { volunteerHours: true } }),
+      prisma.user.count({where:{role:"VOLUNTEER",status:"ACTIVE"}}),
     ]);
   return {
     totalActivities,
+    totalVolunteers,
     activitiesByStatus: Object.fromEntries(activitiesByStatus.map((x) => [x.status, x._count._all])),
     totalRegistrations,
     registrationsByStatus: Object.fromEntries(registrationsByStatus.map((x) => [x.status, x._count._all])),

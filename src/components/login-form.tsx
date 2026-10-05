@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthPanel from "@/components/auth-panel";
 
-export default function LoginForm({ registered = false }: { registered?: boolean }) {
+export default function LoginForm({ registered = false, organizer = false }: { registered?: boolean; organizer?: boolean }) {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -39,7 +39,7 @@ export default function LoginForm({ registered = false }: { registered?: boolean
   };
 
   return (
-    <AuthPanel title="Chào mừng trở lại" description="Đăng nhập để tiếp tục hành trình lan tỏa yêu thương" icon="🔐">
+    <AuthPanel title={organizer ? "Cổng Ban Tổ Chức" : "Chào mừng trở lại"} description={organizer ? "Đăng nhập để quản lý hoạt động tình nguyện" : "Đăng nhập để tiếp tục hành trình lan tỏa yêu thương"} icon={organizer ? "🛡️" : "🔐"}>
 
         {registered && <p role="status" className="mb-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">Đăng ký thành công! Bạn có thể đăng nhập bằng tài khoản vừa tạo.</p>}
         <form onSubmit={handleLogin} className="space-y-4">
@@ -93,6 +93,7 @@ export default function LoginForm({ registered = false }: { registered?: boolean
             {pending ? "Đang đăng nhập…" : "Đăng nhập"}
           </button>
         </form>
+        {!organizer && <div className="mt-6 border-t border-slate-100 pt-4 text-center"><p className="mb-2 text-xs text-slate-500">Bạn là Ban tổ chức sự kiện?</p><Link href="/organizer/login" className="text-sm font-bold text-emerald-600">🔑 Đăng nhập dành cho Ban Tổ Chức →</Link></div>}
         <p className="mt-5 text-center text-sm">Chưa có tài khoản? <Link href="/register" className="font-semibold text-emerald-700 underline">Đăng ký tài khoản</Link></p>
     </AuthPanel>
   );

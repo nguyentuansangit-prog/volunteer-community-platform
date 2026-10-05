@@ -30,10 +30,10 @@ export default function ActivityEditor({ categories, activity }: { categories: C
       router.push(`/activities/${result.id}`); router.refresh();
     } catch (e) { setError(e instanceof Error ? e.message : "Không thể lưu hoạt động."); setBusy(false); }
   }
-  return <main className="flex-1 bg-slate-50 px-4 py-10 text-slate-900"><div className="mx-auto max-w-3xl">
+  return <main className="flex-1 bg-slate-50 px-4 py-12 text-slate-900"><div className="mx-auto max-w-2xl">
     <Link href="/activities?scope=managed" className="text-sm font-semibold text-emerald-700">← Quản lý hoạt động</Link>
-    <section className="mt-6 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-700 p-6 text-white sm:p-8"><p className="text-sm text-emerald-100">Ban tổ chức</p><h1 className="mt-2 text-3xl font-black">{activity ? "Chỉnh sửa hoạt động" : "Tạo hoạt động mới"}</h1><p className="mt-2 text-sm text-emerald-50">Chia sẻ thông tin để kết nối những người cùng chung mục tiêu.</p></div>
+    <section className="mt-6 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-4 p-8 pb-0"><h1 className="text-3xl font-black">{activity ? "Chỉnh sửa hoạt động" : "Tạo hoạt động mới"}</h1><Link href="/activities?scope=managed" className="font-semibold text-emerald-600 hover:underline">Đóng ✕</Link></div>
       <form onSubmit={save} className="grid gap-5 p-6 sm:grid-cols-2 sm:p-8">
         <label className="sm:col-span-2">Tên hoạt động<input name="title" defaultValue={activity?.title} required maxLength={200} className={field} /></label>
         <label className="sm:col-span-2">Mô tả<textarea name="description" defaultValue={activity?.description} required maxLength={10000} rows={6} className={field} /></label>

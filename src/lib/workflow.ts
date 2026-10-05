@@ -144,6 +144,10 @@ export async function listActivities(actor: Actor | null, scope: string, page = 
 export async function listActivitiesPage(actor: Actor | null, scope: string, filters: ActivityListFilters = {}, take = 20) {
   const page = filters.page ?? 1;
   let where: Prisma.ActivityWhereInput = { status: "PUBLISHED" };
+  if (scope === "public" && filters.status) {
+    requireRule(["PUBLISHED", "CLOSED"].includes(filters.status), 400, "VALIDATION_ERROR", "Only public statuses can be filtered");
+    where = { status: filters.status };
+  }
   if (scope === "managed") {
     requireRule(actor && actor.role !== "VOLUNTEER", 403, "FORBIDDEN", "Organizer role required");
     where = actor.role === "ADMIN" ? {} : { organizerId: actor.id };
@@ -155,6 +159,7 @@ export async function listActivitiesPage(actor: Actor | null, scope: string, fil
       OR: [
         { title: { contains: filters.keyword, mode: "insensitive" } },
         { location: { contains: filters.keyword, mode: "insensitive" } },
+        { description: { contains: filters.keyword, mode: "insensitive" } },
       ],
     };
   }
@@ -178,7 +183,7 @@ export async function getActivity(actor: Actor | null, id: string) {
   const activity = await prisma.activity.findUnique({
     where: { id }, include: { category: true, _count: { select: { registrations: { where: { status: "APPROVED" } } } } },
   });
-  requireRule(activity && (activity.status === "PUBLISHED" || (actor && canManage(actor, activity.organizerId))), 404, "NOT_FOUND", "Activity not found");
+  requireRule(activity && (["PUBLISHED", "CLOSED"].includes(activity.status) || (actor && canManage(actor, activity.organizerId))), 404, "NOT_FOUND", "Activity not found");
   return activity;
 }
 

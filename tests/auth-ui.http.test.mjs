@@ -41,7 +41,7 @@ test("integrated auth UI uses real credentials, server roles, protected profiles
       const profile = await (await request("/profile")).text();
       assert.ok(profile.includes(email)); assert.equal(profile.includes(hash), false);
       const workspace = await (await request(destination)).text();
-      assert.ok(workspace.includes(role === "ADMIN" ? "Admin Dashboard" : role === "ORGANIZER" ? "Quản lý hoạt động" : "Khám phá hoạt động"));
+      assert.ok(workspace.includes(role === "ADMIN" ? "Bảng điều khiển Quản trị viên" : role === "ORGANIZER" ? "Quản lý hoạt động" : "Hoạt động tình nguyện"));
       const createPage = await (await request("/activities/create")).text();
       assert.ok(createPage.includes(role === "VOLUNTEER" ? "Không có quyền truy cập" : "Tạo hoạt động mới"));
       const registrationPage = await (await request("/organizer/registrations")).text();
@@ -58,4 +58,3 @@ test("integrated auth UI uses real credentials, server roles, protected profiles
     }
   } finally { await db.query('DELETE FROM "User" WHERE "id"=ANY($1::text[])',[ids]); await db.end(); }
 });
-
