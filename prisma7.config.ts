@@ -11,7 +11,9 @@ export default defineConfig({
   },
 
   datasource: {
-    url: databaseUrl() ?? env("DATABASE_URL"),
+    // Migrations use Neon's direct endpoint; runtime retains the pooled URL.
+    // Apply the same QA database selection to both endpoints.
+    url: databaseUrl(process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL) ?? env("DATABASE_URL"),
     shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL,
   },
 });

@@ -1,6 +1,5 @@
 // Only an explicitly configured Vercel Preview may select the isolated QA database.
-export function databaseUrl() {
-  const value = process.env.DATABASE_URL;
+export function databaseUrl(value = process.env.DATABASE_URL) {
   const name = process.env.QA_DATABASE_NAME;
   if (!name) return value;
   if (process.env.VERCEL_ENV !== "preview" || !/^volunteer_[a-z0-9_]+_test$/.test(name)) {
