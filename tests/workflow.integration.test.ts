@@ -43,6 +43,11 @@ test("PostgreSQL workflow, permissions, audit history and concurrent capacity en
     await fails(changeActivityStatus(owner, activity.id, { status: "PUBLISHED" }), "FORBIDDEN");
     await changeActivityStatus(admin, activity.id, { status: "PUBLISHED" });
     assert.equal((await getActivity(null, activity.id)).id, activity.id);
+    for (const actor of [owner, other, admin]) {
+      await fails(registerActivity(actor, activity.id), "FORBIDDEN");
+      assert.equal(await prisma.registration.count({ where: { userId: actor.id, activityId: activity.id } }), 0);
+      assert.equal(await prisma.registrationStatusHistory.count({ where: { actorId: actor.id } }), 0);
+    }
     assert.ok((await listActivities(null, "public")).every((item) => item.status === "PUBLISHED"));
     await fails(updateActivity(owner, activity.id, { title: "Bypass moderation" }), "ACTIVITY_LOCKED");
     await fails(updateActivity(other, activity.id, { title: "Other owner" }), "FORBIDDEN");

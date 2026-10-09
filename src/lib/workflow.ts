@@ -2,7 +2,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   type Actor, activityStatusInput, canManage, createActivityInput,
-  registrationStatusInput, requireRule, updateActivityInput,
+  registrationStatusInput, requireRule, requireVolunteerRegistration, updateActivityInput,
   validateActivityTransition, validateDates, validateRegistrationTransition,
 } from "@/lib/workflow-rules";
 
@@ -83,6 +83,7 @@ export async function changeActivityStatus(actor: Actor, id: string, input: unkn
 }
 
 export async function registerActivity(actor: Actor, activityId: string) {
+  requireVolunteerRegistration(actor);
   return prisma.$transaction(async (tx) => {
     const activity = await lockedActivity(tx, activityId);
     requireRule(activity.status === "PUBLISHED" && activity.startDate > new Date(), 409, "REGISTRATION_CLOSED", "Activity is not accepting registrations");

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { clientApi } from "@/lib/client-api";
 
 const labels: Record<string, string> = { PENDING: "Chờ duyệt", APPROVED: "Đã duyệt", REJECTED: "Đã từ chối", CANCELLED: "Đã hủy" };
-export default function ActivityRegistration({ activityId, signedIn, open, full, registration }: { activityId: string; signedIn: boolean; open: boolean; full: boolean; registration: { id: string; status: string } | null }) {
+export default function ActivityRegistration({ activityId, signedIn, canRegister, open, full, registration }: { activityId: string; signedIn: boolean; canRegister: boolean; open: boolean; full: boolean; registration: { id: string; status: string } | null }) {
   const router = useRouter();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -23,6 +23,9 @@ export default function ActivityRegistration({ activityId, signedIn, open, full,
     finally { setBusy(false); }
   }
   const cancellable = registration && open && ["PENDING", "APPROVED"].includes(registration.status);
+  if (signedIn && !canRegister && !registration) {
+    return <p className="rounded-xl bg-slate-100 p-4 text-slate-700">Chỉ tài khoản tình nguyện viên có thể đăng ký tham gia hoạt động.</p>;
+  }
   return <section className="rounded-2xl border border-emerald-100 bg-emerald-50 p-6">
     <h2 className="text-xl font-bold">Tham gia cùng cộng đồng</h2>
     {registration && <p className="mt-3 font-semibold text-emerald-800">Đăng ký của bạn: {labels[registration.status]}</p>}

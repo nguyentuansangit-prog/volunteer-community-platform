@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   canManage, createActivityInput, updateActivityInput, validateActivityTransition,
-  validateDates, validateRegistrationTransition, WorkflowError,
+  validateDates, validateRegistrationTransition, requireVolunteerRegistration, WorkflowError,
 } from "../src/lib/workflow-rules";
 
 const owner = { id: "owner", role: "ORGANIZER" as const };
@@ -10,6 +10,14 @@ const admin = { id: "admin", role: "ADMIN" as const };
 const volunteer = { id: "volunteer", role: "VOLUNTEER" as const };
 const activity = { organizerId: owner.id, status: "PUBLISHED", startDate: new Date("2099-01-01") };
 const fails = (fn: () => void, code: string) => assert.throws(fn, (error) => error instanceof WorkflowError && error.code === code);
+
+test("only volunteers can register, including when management roles target another organizer's activity", () => {
+  requireVolunteerRegistration(volunteer);
+  for (const actor of [owner, { ...owner, id: "other" }, admin]) {
+    assert.throws(() => requireVolunteerRegistration(actor), (error) =>
+      error instanceof WorkflowError && error.status === 403 && error.code === "FORBIDDEN");
+  }
+});
 
 test("ownership and admin permissions", () => {
   assert.equal(canManage(owner, owner.id), true);

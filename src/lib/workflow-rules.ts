@@ -12,6 +12,10 @@ export function requireRule(condition: unknown, status: number, code: string, me
 
 export type Actor = { id: string; role: "VOLUNTEER" | "ORGANIZER" | "ADMIN" };
 
+export function requireVolunteerRegistration(actor: Actor) {
+  requireRule(actor.role === "VOLUNTEER", 403, "FORBIDDEN", "Only volunteers can register for activities");
+}
+
 export function canManage(actor: Actor, organizerId: string) {
   return actor.role === "ADMIN" || (actor.role === "ORGANIZER" && actor.id === organizerId);
 }
