@@ -13,13 +13,13 @@ Rà soát các luồng nghiệp vụ chính của hệ thống, đảm bảo ch�
 
 | ID | Luồng nghiệp vụ | Kết quả mong đợi | Trạng thái |
 |---|---|---|---|
-| BW01 | Đăng nhập | Người dùng đăng nhập và được điều hướng đúng quyền | Chưa kiểm tra |
-| BW02 | Xem hoạt động | Hiển thị danh sách hoạt động chính xác | Chưa kiểm tra |
-| BW03 | Xem chi tiết hoạt động | Thông tin hoạt động được hiển thị đầy đủ | Chưa kiểm tra |
-| BW04 | Tạo hoạt động | Người có quyền tạo hoạt động thành công | Chưa kiểm tra |
-| BW05 | Duyệt hoạt động | Trạng thái hoạt động thay đổi đúng quy trình | Chưa kiểm tra |
-| BW06 | Đăng ký hoạt động | Volunteer đăng ký thành công khi đủ điều kiện | Chưa kiểm tra |
-| BW07 | Quản lý đăng ký | Người có quyền xem và xử lý các đăng ký | Chưa kiểm tra |
+| BW01 | Đăng nhập | Người dùng đăng nhập và được điều hướng đúng quyền | Đạt |
+| BW02 | Xem hoạt động | Hiển thị danh sách hoạt động chính xác | Đạt |
+| BW03 | Xem chi tiết hoạt động | Thông tin hoạt động được hiển thị đầy đủ | Đạt |
+| BW04 | Tạo hoạt động | Người có quyền tạo hoạt động thành công | Đạt |
+| BW05 | Duyệt hoạt động | Trạng thái hoạt động thay đổi đúng quy trình | Đạt |
+| BW06 | Đăng ký hoạt động | Volunteer đăng ký thành công khi đủ điều kiện | Đạt |
+| BW07 | Quản lý đăng ký | Người có quyền xem và xử lý các đăng ký | Đạt |
 
 ## 3. Quy tắc nghiệp vụ cần xác nhận
 
