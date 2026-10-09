@@ -86,6 +86,26 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
 
   const handleRegister = () => {
     if (!selectedActivity) return;
+
+    // 1. Tạo bản ghi đăng ký gắn trực tiếp với tên tài khoản đang đăng nhập
+    const newRegistration = {
+      id: `reg-${Date.now()}`,
+      volunteerName: currentUserName, // 👈 Đảm bảo lấy đúng tên user hiện tại
+      activityTitle: selectedActivity.title,
+      status: 'PENDING' as const,
+    };
+
+    // 2. Lưu vào localStorage chung cho danh sách đăng ký
+    if (typeof window !== 'undefined') {
+      const existingRegs = JSON.parse(localStorage.getItem('activityRegistrations') || '[]');
+      const alreadyExists = existingRegs.some(
+        (r: any) => r.volunteerName === currentUserName && r.activityTitle === selectedActivity.title
+      );
+      if (!alreadyExists) {
+        localStorage.setItem('activityRegistrations', JSON.stringify([newRegistration, ...existingRegs]));
+      }
+    }
+
     setActivities((currentActivities) =>
       currentActivities.map((activity) => {
         if (activity.id !== selectedActivity.id) return activity;
@@ -109,7 +129,6 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
       setMessage('');
     }, 1200);
   };
-
   const handleParticipantClick = (activity: Activity, participant: Participant) => {
     if (participant.name !== currentUserName) return;
     setCancelActivity(activity);
@@ -143,6 +162,15 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
 
     return matchesSearch && matchesLocation;
   });
+
+  // --- LOGIC PHÂN TRANG MỚI THÊM VÀO ---
+  const ITEMS_PER_PAGE = 6;
+  // 1. Tính tổng số trang dựa trên tổng số lượng hoạt động sau khi lọc
+  const totalPages = Math.ceil(filteredActivities.length / ITEMS_PER_PAGE) || 1;
+
+  // 2. Cắt mảng dữ liệu để chỉ hiển thị các hoạt động của trang hiện tại
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentActivities = filteredActivities.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
@@ -280,10 +308,10 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
           </div>
         )}
 
-        {/* Danh sách hoạt động (Chỉ hiển thị khi đã tải xong, không lỗi và có dữ liệu) */}
-        {!isLoading && !error && filteredActivities.length > 0 && (
+        {/* Danh sách hoạt động (Sử dụng currentActivities thay vì filteredActivities để hỗ trợ phân trang) */}
+        {!isLoading && !error && currentActivities.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredActivities.map((activity) => {
+            {currentActivities.map((activity) => {
               const registered = isRegistered(activity);
               const isFull = activity.participants.length >= activity.capacity;
 
@@ -361,7 +389,11 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
                     </div>
 
                     <div className="mt-auto pt-5">
-                      {registered ? (
+                      {userRole === 'ORGANIZER' || userRole === 'ADMIN' ? (
+                        <div className="w-full bg-slate-100 text-slate-500 py-2.5 rounded-xl font-semibold text-center text-sm">
+                          🛡️ Tài khoản BTC (Quản lý hoạt động)
+                        </div>
+                      ) : registered ? (
                         <button
                           type="button"
                           onClick={() => setCancelActivity(activity)}
@@ -390,11 +422,12 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
           </div>
         )}
 
-        {/* Giao diện Phân trang (Pagination) - Chỉ hiển thị khi có dữ liệu */}
+        {/* Giao diện Phân trang (Pagination) đã cập nhật */}
         {!isLoading && !error && filteredActivities.length > 0 && (
           <div className="flex items-center justify-center gap-4 mt-12 py-4">
             {/* Nút Trang trước */}
             <button
+              type="button"
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               className="px-5 py-2.5 rounded-xl font-bold text-sm bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm"
@@ -402,15 +435,16 @@ export default function ActivitiesClient({ initialActivities }: { initialActivit
               ← Trang trước
             </button>
 
-            {/* Hiển thị số trang hiện tại / tổng số trang */}
+            {/* Hiển thị số trang động */}
             <div className="px-4 py-2 bg-emerald-50 text-emerald-800 rounded-xl font-bold text-sm border border-emerald-100">
-              Trang {currentPage} / 5
+              Trang {currentPage} / {totalPages}
             </div>
 
             {/* Nút Trang sau */}
             <button
-              onClick={() => setCurrentPage(prev => prev + 1)}
-              disabled={currentPage === 5} // (Thay số 5 bằng tổng số trang thực tế từ backend)
+              type="button"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage >= totalPages}
               className="px-5 py-2.5 rounded-xl font-bold text-sm bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm"
             >
               Trang sau →

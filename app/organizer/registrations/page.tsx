@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -15,24 +15,43 @@ type UserRole = 'GUEST' | 'VOLUNTEER' | 'ORGANIZER' | 'ADMIN';
 export default function OrganizerRegistrationsPage() {
   const router = useRouter();
   
-  // Khởi tạo trực tiếp từ localStorage để tránh lỗi set state trong useEffect
-  const [userRole] = useState<UserRole>(() => {
-    if (typeof window !== 'undefined') {
-      const role = (localStorage.getItem('userRole') as UserRole) || 'GUEST';
-      if (role !== 'ORGANIZER' && role !== 'ADMIN') {
-        alert('Bạn không có quyền truy cập trang quản lý của Ban tổ chức!');
-        router.push('/activities');
-      }
-      return role;
-    }
-    return 'GUEST';
-  });
+  const [userRole, setUserRole] = useState<UserRole>('GUEST');
+  const [isMounted, setIsMounted] = useState(false);
   
   const [registrations, setRegistrations] = useState<Registration[]>([
     { id: '1', volunteerName: 'Nguyễn A', activityTitle: 'Trồng cây xanh bảo vệ môi trường', status: 'PENDING' },
     { id: '2', volunteerName: 'Trần B', activityTitle: 'Dọn dẹp rác thải khu vực bờ sông', status: 'APPROVED' },
     { id: '3', volunteerName: 'Lê C', activityTitle: 'Quyên góp sách vở cho trẻ em nghèo', status: 'REJECTED' },
   ]);
+
+  // Đảm bảo chỉ đọc localStorage sau khi component đã mount lên client
+  useEffect(() => {
+    setIsMounted(true);
+    const role = (localStorage.getItem('userRole') as UserRole) || 'GUEST';
+    setUserRole(role);
+
+    if (role !== 'ORGANIZER' && role !== 'ADMIN') {
+      alert('Bạn không có quyền truy cập trang quản lý của Ban tổ chức!');
+      router.push('/activities');
+      return;
+    }
+
+    const savedRegs = localStorage.getItem('activityRegistrations');
+    if (savedRegs) {
+      try {
+        setRegistrations(JSON.parse(savedRegs));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [router]);
+
+  // Đồng bộ lại vào localStorage khi có thay đổi
+  useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem('activityRegistrations', JSON.stringify(registrations));
+    }
+  }, [registrations, isMounted]);
 
   const [selectedRegId, setSelectedRegId] = useState<string | null>(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -60,8 +79,8 @@ export default function OrganizerRegistrationsPage() {
     setSelectedRegId(null);
   };
 
-  // Nếu chưa load xong hoặc không có quyền thì ẩn bớt nội dung giao diện
-  if (userRole !== 'ORGANIZER' && userRole !== 'ADMIN') {
+  // Tránh render nội dung cho đến khi client mount xong để khớp HTML
+  if (!isMounted || (userRole !== 'ORGANIZER' && userRole !== 'ADMIN')) {
     return null;
   }
 
@@ -80,7 +99,7 @@ export default function OrganizerRegistrationsPage() {
           </Link>
         </div>
 
-        {/* 1. GIAO DIỆN DẠNG BẢNG (Chỉ hiện trên màn hình lớn từ MD trở lên) */}
+        {/* Giao diện dạng bảng */}
         <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -137,7 +156,7 @@ export default function OrganizerRegistrationsPage() {
           </div>
         </div>
 
-        {/* 2. GIAO DIỆN DẠNG CARD (Tự động hiển thị trên Mobile để chống tràn màn hình) */}
+        {/* Giao diện dạng card cho mobile */}
         <div className="md:hidden space-y-4">
           {registrations.map((reg) => (
             <div key={reg.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-3">

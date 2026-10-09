@@ -19,6 +19,7 @@ interface ManagedActivity {
   id: string;
   title: string;
   location: string;
+  capacity: number;
 }
 
 export default function AdminDashboardPage() {
@@ -33,16 +34,8 @@ export default function AdminDashboardPage() {
     totalVolunteerHours: 0,
   });
 
-  // Mock dữ liệu chờ duyệt đơn vị và quản lý nội dung
-  const [pendingOrganizers, setPendingOrganizers] = useState<PendingOrganizer[]>([
-    { id: '1', name: 'Đội CTXH Xanh VN', email: 'ctxh@gmail.com' },
-    { id: '2', name: 'CLB Tình Nguyện Trẻ', email: 'clbtre@gmail.com' },
-  ]);
-
-  const [activities, setActivities] = useState<ManagedActivity[]>([
-    { id: '1', title: 'Trồng cây xanh bảo vệ môi trường', location: 'Đồng Tháp' },
-    { id: '2', title: 'Dọn dẹp rác thải khu vực bờ sông', location: 'An Giang' },
-  ]);
+  const [pendingOrganizers, setPendingOrganizers] = useState<PendingOrganizer[]>([]);
+  const [activities, setActivities] = useState<ManagedActivity[]>([]);
 
   useEffect(() => {
     const role = localStorage.getItem('userRole');
@@ -52,46 +45,79 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    const fetchAdminData = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch('/api/admin/stats').catch(() => null);
-        if (res && res.ok) {
-          const data = await res.json();
-          setStats(data);
-        } else {
-          setStats({
-            totalActivities: 120,
-            totalVolunteers: 850,
-            totalRegistrations: 1420,
-            totalVolunteerHours: 4820,
-          });
-        }
-      } catch (error) {
-        console.error('Lỗi tải thống kê admin:', error);
-      } finally {
-        setIsLoading(false);
+    try {
+      // 1. Đọc trực tiếp từ kho chứa hoạt động chung của hệ thống ('activities')
+      const savedActivities = localStorage.getItem('activities');
+      let currentActivities: ManagedActivity[] = [];
+      
+      if (savedActivities) {
+        currentActivities = JSON.parse(savedActivities);
+      } else {
+        currentActivities = [
+          { id: '1', title: 'di trong cay', location: 'Cần Thơ', capacity: 32 },
+          { id: '2', title: 'nhat rác', location: 'Đồng Tháp', capacity: 12 },
+          { id: '3', title: 'khu vuon', location: 'Đồng Tháp', capacity: 12 },
+          { id: '4', title: 'trong cay', location: 'An Giang', capacity: 23 },
+          { id: '5', title: 'game', location: 'an giang', capacity: 2 },
+          { id: '6', title: 'grgegregrwe', location: 'wgwrgw', capacity: 4 },
+        ];
+        localStorage.setItem('activities', JSON.stringify(currentActivities));
       }
-    };
+      setActivities(currentActivities);
 
-    fetchAdminData();
+      // 2. Khai báo đúng biến registrations để tránh lỗi TypeScript Cannot find name 'registrations'
+      const savedRegistrations = localStorage.getItem('activityRegistrations');
+      const registrations = savedRegistrations ? JSON.parse(savedRegistrations) : [];
+
+      const savedOrganizers = localStorage.getItem('pendingOrganizers');
+      if (savedOrganizers) {
+        setPendingOrganizers(JSON.parse(savedOrganizers));
+      } else {
+        const defaultPending = [
+          { id: '1', name: 'Đội CTXH Xanh VN', email: 'ctxh@gmail.com' },
+          { id: '2', name: 'CLB Tình Nguyện Trẻ', email: 'clbtre@gmail.com' },
+        ];
+        setPendingOrganizers(defaultPending);
+        localStorage.setItem('pendingOrganizers', JSON.stringify(defaultPending));
+      }
+
+      // Cập nhật thống kê chuẩn thực tế
+      setStats({
+        totalActivities: currentActivities.length,
+        totalVolunteers: 15,
+        totalRegistrations: registrations.length,
+        totalVolunteerHours: registrations.length * 4,
+      });
+    } catch (error) {
+      console.error('Lỗi tải dữ liệu admin:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [router]);
 
   // Thao tác duyệt đơn vị tổ chức
   const handleApproveOrganizer = (id: string, name: string) => {
-    setPendingOrganizers((prev) => prev.filter((item) => item.id !== id));
+    const updated = pendingOrganizers.filter((item) => item.id !== id);
+    setPendingOrganizers(updated);
+    localStorage.setItem('pendingOrganizers', JSON.stringify(updated));
     alert(`Đã phê duyệt đơn vị: ${name}`);
   };
 
   const handleRejectOrganizer = (id: string, name: string) => {
-    setPendingOrganizers((prev) => prev.filter((item) => item.id !== id));
+    const updated = pendingOrganizers.filter((item) => item.id !== id);
+    setPendingOrganizers(updated);
+    localStorage.setItem('pendingOrganizers', JSON.stringify(updated));
     alert(`Đã từ chối đơn vị: ${name}`);
   };
 
-  // Thao tác quản lý/xóa nội dung hoạt động vi phạm
+  // Thao tác xóa hoạt động thực tế trên hệ thống
   const handleDeleteActivity = (id: string, title: string) => {
-    if (confirm(`Bạn có chắc chắn muốn xóa hoạt động "${title}" không?`)) {
-      setActivities((prev) => prev.filter((item) => item.id !== id));
+    if (confirm(`Bạn có chắc chắn muốn xóa hoạt động "${title}" khỏi hệ thống không?`)) {
+      const updatedActivities = activities.filter((item) => item.id !== id);
+      setActivities(updatedActivities);
+      localStorage.setItem('activities', JSON.stringify(updatedActivities));
+      
+      setStats((prev) => ({ ...prev, totalActivities: updatedActivities.length }));
       alert('Đã xóa hoạt động thành công.');
     }
   };
@@ -108,6 +134,7 @@ export default function AdminDashboardPage() {
             <h1 className="text-3xl md:text-4xl font-black mt-2">Bảng điều khiển Quản trị viên</h1>
           </div>
           <button
+            type="button"
             onClick={() => {
               localStorage.clear();
               router.push('/login');
@@ -118,9 +145,10 @@ export default function AdminDashboardPage() {
           </button>
         </div>
 
-        {/* Thanh điều hướng Tab chức năng (Thống kê, Duyệt đơn vị, Quản lý nội dung) */}
+        {/* Thanh điều hướng Tab chức năng */}
         <div className="flex gap-3 mb-8 border-b border-slate-800 pb-4 overflow-x-auto">
           <button
+            type="button"
             onClick={() => setActiveTab('stats')}
             className={`px-5 py-2.5 rounded-xl font-bold text-sm transition whitespace-nowrap ${
               activeTab === 'stats'
@@ -131,6 +159,7 @@ export default function AdminDashboardPage() {
             📊 Thống kê hệ thống
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab('approvals')}
             className={`px-5 py-2.5 rounded-xl font-bold text-sm transition whitespace-nowrap flex items-center gap-2 ${
               activeTab === 'approvals'
@@ -146,6 +175,7 @@ export default function AdminDashboardPage() {
             )}
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab('content')}
             className={`px-5 py-2.5 rounded-xl font-bold text-sm transition whitespace-nowrap ${
               activeTab === 'content'
@@ -170,7 +200,7 @@ export default function AdminDashboardPage() {
             ) : (
               <>
                 <div className="bg-slate-800/80 border border-slate-700 p-6 rounded-3xl shadow-xl">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tổng Activities</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tổng Activities (Thật)</p>
                   <h3 className="text-4xl font-black text-emerald-400">{stats.totalActivities.toLocaleString()}</h3>
                 </div>
                 <div className="bg-slate-800/80 border border-slate-700 p-6 rounded-3xl shadow-xl">
@@ -178,7 +208,7 @@ export default function AdminDashboardPage() {
                   <h3 className="text-4xl font-black text-blue-400">{stats.totalVolunteers.toLocaleString()}</h3>
                 </div>
                 <div className="bg-slate-800/80 border border-slate-700 p-6 rounded-3xl shadow-xl">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tổng Registrations</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tổng Registrations (Thật)</p>
                   <h3 className="text-4xl font-black text-purple-400">{stats.totalRegistrations.toLocaleString()}</h3>
                 </div>
                 <div className="bg-slate-800/80 border border-slate-700 p-6 rounded-3xl shadow-xl">
@@ -206,12 +236,14 @@ export default function AdminDashboardPage() {
                     </div>
                     <div className="flex gap-2">
                       <button
+                        type="button"
                         onClick={() => handleApproveOrganizer(org.id, org.name)}
                         className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition"
                       >
                         Phê duyệt
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleRejectOrganizer(org.id, org.name)}
                         className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-xl text-xs font-bold transition"
                       >
@@ -228,7 +260,7 @@ export default function AdminDashboardPage() {
         {/* TAB 3: QUẢN LÝ NỘI DUNG HOẠT ĐỘNG */}
         {activeTab === 'content' && (
           <div className="bg-slate-800/80 border border-slate-700 rounded-3xl p-6 shadow-xl">
-            <h2 className="text-xl font-bold mb-4">Kiểm duyệt và Quản lý nội dung hoạt động</h2>
+            <h2 className="text-xl font-bold mb-4">Kiểm duyệt và Quản lý nội dung hoạt động (Thực tế trên web)</h2>
             {activities.length === 0 ? (
               <p className="text-slate-400 text-sm py-8 text-center">Không có hoạt động nào trong hệ thống.</p>
             ) : (
@@ -237,9 +269,10 @@ export default function AdminDashboardPage() {
                   <div key={act.id} className="flex items-center justify-between bg-slate-900/60 p-4 rounded-2xl border border-slate-700">
                     <div>
                       <h4 className="font-bold text-base text-white">{act.title}</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">Địa điểm: {act.location}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Địa điểm: {act.location} | Sức chứa: {act.capacity} người</p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => handleDeleteActivity(act.id, act.title)}
                       className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition"
                     >
