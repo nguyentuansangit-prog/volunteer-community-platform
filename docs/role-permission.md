@@ -1,153 +1,26 @@
-# Role and Permission
+# Role & Permission — candidate tuần 8
+09/10/2026 · PR #52 SHA `b59a335a3a400b0deb8a27677966fae78647d8eb` · chờ review #47/#48/#50.
+Không khẳng định các quyền này đã triển khai main/production. Role là nhóm quyền riêng; Organizer không kế thừa quyền đăng ký của Volunteer. Sửa mâu thuẫn bảng cũ theo US-03 AC3.1 và #43.
 
-## 1. Overview
-
-Hệ thống Volunteer Community Platform sử dụng 4 nhóm quyền chính:
-
-- Guest
-- Volunteer
-- Organizer
-- Admin
-
-Mỗi role sẽ có phạm vi chức năng khác nhau nhằm đảm bảo việc phân quyền rõ ràng và an toàn.
-
----
-
-## 2. Guest
-
-Guest là người dùng chưa đăng nhập.
-
-### Permissions
-
-- Xem trang chủ.
-- Xem danh sách hoạt động.
-- Xem chi tiết hoạt động.
-- Tìm kiếm hoạt động.
-- Lọc hoạt động theo danh mục.
-- Đăng ký tài khoản.
-- Đăng nhập.
-
-### Restrictions
-
-Guest không được:
-
-- Đăng ký tham gia hoạt động.
-- Tạo hoạt động.
-- Quản lý hoạt động.
-- Xem thông tin cá nhân.
-- Truy cập trang quản trị.
-
----
-
-## 3. Volunteer
-
-Volunteer là người dùng đã đăng ký tài khoản và tham gia các hoạt động tình nguyện.
-
-### Permissions
-
-- Đăng nhập / đăng xuất.
-- Xem và chỉnh sửa thông tin cá nhân.
-- Xem danh sách hoạt động.
-- Xem chi tiết hoạt động.
-- Tìm kiếm và lọc hoạt động.
-- Đăng ký tham gia hoạt động.
-- Hủy đăng ký khi được phép.
-- Xem trạng thái đăng ký.
-- Xem danh sách hoạt động đã đăng ký.
-- Nhận thông báo từ hệ thống.
-
-### Restrictions
-
-Volunteer không được:
-
-- Tạo hoạt động.
-- Chỉnh sửa hoạt động của Organizer.
-- Xóa hoạt động.
-- Quản lý người dùng.
-- Truy cập chức năng Admin.
-
----
-
-## 4. Organizer
-
-Organizer là người phụ trách tạo và quản lý các hoạt động tình nguyện.
-
-### Permissions
-
-Organizer có các quyền của Volunteer và bổ sung:
-
-- Tạo Activity mới.
-- Chỉnh sửa Activity do mình quản lý.
-- Xóa hoặc hủy Activity khi được phép.
-- Xem danh sách Volunteer đăng ký.
-- Approve đăng ký.
-- Reject đăng ký.
-- Quản lý số lượng người tham gia.
-- Gửi thông báo liên quan đến Activity.
-- Theo dõi trạng thái hoạt động.
-
-### Restrictions
-
-Organizer không được:
-
-- Quản lý toàn bộ User trong hệ thống.
-- Thay đổi role của User.
-- Quản lý Activity của Organizer khác nếu không được cấp quyền.
-- Truy cập các chức năng chỉ dành cho Admin.
-
----
-
-## 5. Admin
-
-Admin là role có quyền quản lý cao nhất trong hệ thống.
-
-### Permissions
-
-- Quản lý User.
-- Xem danh sách User.
-- Khóa hoặc mở khóa tài khoản.
-- Quản lý Role.
-- Quản lý toàn bộ Activity.
-- Chỉnh sửa hoặc xóa Activity khi cần.
-- Quản lý Category.
-- Quản lý Registration.
-- Quản lý Notification.
-- Theo dõi dữ liệu hệ thống.
-- Truy cập Dashboard quản trị.
-
----
-
-## 6. Permission Matrix
-
-| Function | Guest | Volunteer | Organizer | Admin |
+| Chức năng | Guest | Volunteer | Organizer | Admin |
 |---|---|---|---|---|
-| Xem hoạt động | Yes | Yes | Yes | Yes |
-| Xem chi tiết hoạt động | Yes | Yes | Yes | Yes |
-| Đăng ký tài khoản | Yes | No | No | No |
-| Đăng ký Activity | No | Yes | Yes | Yes |
-| Xem Profile | No | Yes | Yes | Yes |
-| Tạo Activity | No | No | Yes | Yes |
-| Chỉnh sửa Activity | No | No | Own Activity | All |
-| Xóa Activity | No | No | Own Activity | All |
-| Approve Registration | No | No | Yes | Yes |
-| Reject Registration | No | No | Yes | Yes |
-| Quản lý Category | No | No | No | Yes |
-| Quản lý User | No | No | No | Yes |
-| Quản lý Role | No | No | No | Yes |
-| Admin Dashboard | No | No | No | Yes |
+| Xem/tìm public | Có | Có | Có | Có |
+| Xem private activity | Không | Không | Của mình | Toàn cục |
+| Tự tạo tài khoản | Volunteer/Organizer | Không áp dụng | Không áp dụng | Không tự tạo Admin |
+| Tạo đơn tham gia | Không | Đủ điều kiện | Không | Không |
+| Xem đơn cá nhân | Không | Của mình | Của mình nếu có dữ liệu cũ | Của mình nếu có dữ liệu cũ |
+| Hủy đơn | Không | Chính chủ, trước bắt đầu | Không hủy thay | Không hủy thay |
+| Tạo activity | Không | Không | Có | Có |
+| Sửa activity | Không | Không | Của mình DRAFT/REJECTED | Mọi activity DRAFT/REJECTED |
+| Gửi duyệt/đóng | Không | Không | Của mình, đúng transition | Mọi activity, đúng transition |
+| Duyệt activity | Không | Không | Không | PENDING → PUBLISHED/REJECTED |
+| Xóa activity | Không | Không | Của mình, đủ điều kiện | Mọi activity, đủ điều kiện |
+| Xem/duyệt đơn | Không | Không | Activity của mình | Toàn cục |
+| Xem/sửa attendance | Không | Không | Của mình, APPROVED | Toàn cục, APPROVED |
+| Dashboard | Không | Không | Sở hữu | Toàn cục |
+| Notification/profile | Không | Chính mình | Chính mình | Chính mình |
 
----
+Hủy chỉ PENDING/APPROVED trước bắt đầu. Xóa chỉ DRAFT/PENDING/REJECTED chưa có registration. Thiếu session trả 401 ở API bảo vệ; thiếu quyền 403; private activity có thể 404 tránh tiết lộ tồn tại. Kiểm tra API/DB, không chỉ ẩn nút.
 
-## 7. Role Summary
-
-```text
-Guest
-  |
-  v
-Volunteer
-  |
-  v
-Organizer
-  |
-  v
-Admin
+Chưa triển khai: sửa profile; CRUD user/khóa tài khoản/đổi role; duyệt tổ chức; CRUD category; gửi notification thủ công. API đọc category không chứng minh có quản lý category. Dữ liệu đơn sai quyền từ phiên bản trước cần Trân/Kiên đánh giá riêng, không tự xóa.
+Nguồn: src/lib/{workflow-rules,workflow,week7}.ts và API routes tại SHA trên. [Business Rules](week7-business-rules.md).
