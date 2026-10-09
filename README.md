@@ -70,3 +70,8 @@ Kiểm thử HTTP cần máy chủ cục bộ đang chạy trên DB thử nghi�
 - [Điều kiện release và bàn giao tuần 8](docs/week8-release-handover.md)
 
 Nhánh tích hợp và Preview chưa đồng nghĩa với bản production được nghiệm thu. Theo dõi bằng chứng nghiệm thu trong Issues #46–#51.
+
+- [Backend contract, ERD và Data Dictionary tuần 8](docs/week8-backend-contract.md)
+- [Security decisions](docs/week8-security.md)
+- [Migration và vận hành](docs/week8-operations.md)
+- [Kết quả kỹ thuật Trân](docs/week8-tran-results.md)
