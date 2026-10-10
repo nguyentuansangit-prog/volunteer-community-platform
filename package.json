@@ -10,7 +10,7 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "test": "tsx --test tests/workflow-rules.test.ts tests/week7-rules.test.ts tests/account-registration.test.ts tests/database-url.test.ts",
-    "test:integration": "tsx --test --test-concurrency=1 tests/workflow.integration.test.ts tests/week7.integration.test.ts",
+    "test:integration": "tsx --test --test-concurrency=1 tests/workflow.integration.test.ts tests/week7.integration.test.ts tests/week8.integration.test.ts",
     "test:http": "node --test tests/workflow.http.test.mjs tests/workflow-auth.http.test.mjs tests/week7.http.test.mjs tests/account-registration.http.test.mjs tests/auth-ui.http.test.mjs",
     "db:seed": "prisma db seed"
   },
@@ -40,6 +40,9 @@
     "typescript": "^5"
   },
   "overrides": {
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.0"
+    },
     "prisma": {
       "mysql2": "3.24.5"
     }
