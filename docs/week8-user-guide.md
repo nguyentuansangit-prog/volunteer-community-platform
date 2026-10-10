@@ -1,197 +1,49 @@
-# WEEK 8 – USER GUIDE
+# Tuần 8 — Hướng dẫn sử dụng
 
-**Project:** Volunteer Community Platform  
-**Team:** Kyanon Internship 2026 – Group 1  
-**Person in charge:** Phúc  
-**Role:** Product / Business  
-**Sprint:** Sprint 4 – Release  
-**Document version:** 1.0
+Phúc · Product/Business · Kyanon Internship 2026 · Sprint 4 (12–18/10/2026).
+Phiên bản 2, ngày 09/10/2026; Draft, chờ review/UAT.
 
----
+## Phiên bản áp dụng
+Hướng dẫn mô tả candidate PR #52, SHA `b59a335a3a400b0deb8a27677966fae78647d8eb`, kế thừa #44. Candidate chưa merge main; Preview đang lỗi cấp tài nguyên theo comment PR #52. Sang/Trân cần cấp URL QA, SHA và DB riêng trước khi dùng. URL production của bản 1 chưa được xác minh trong lần này; không suy ra các chức năng dưới đây đã có trên production.
 
-## 1. Introduction
+Nguồn code tại SHA trên: src/components/{activity-editor,activity-workspace,registration-management,attendance-panel,notifications-panel,dashboard-panel,register-form}.tsx; src/app/profile/page.tsx; src/lib/{workflow,week7}.ts. [Nghiệp vụ](week8-business-workflow-review.md) · [UAT/demo](week8-uat-demo.md).
 
-Volunteer Community Platform là nền tảng quản lý hoạt động tình nguyện, giúp người dùng tìm kiếm, xem thông tin và đăng ký tham gia các hoạt động cộng đồng.
+## Guest và tài khoản
+1. Mở `/activities`, tìm bằng từ khóa, địa điểm và trạng thái. Mặc định PUBLISHED; có thể chọn CLOSED. Keyword tìm trong tiêu đề, địa điểm và mô tả. Chi tiết hiển thị ngày giờ, danh mục, địa điểm, mô tả và số đơn đã duyệt.
+2. Mở `/register`, nhập họ tên/email/mật khẩu/xác nhận, chọn Volunteer hoặc Organizer. Không tự đăng ký Admin. Mật khẩu ít nhất 8 ký tự, chữ hoa, chữ thường và số hoặc ký tự đặc biệt, tối đa 72 byte. Email trùng bị từ chối.
+3. Tạo tài khoản xong chuyển đến đăng nhập. Dùng `/login`, vào khu vực theo role; đăng xuất trên thanh điều hướng.
+4. `/profile` chỉ xem tài khoản. Chưa có sửa hồ sơ hay tổng giờ cá nhân trong candidate.
 
-Hệ thống hỗ trợ người quản lý tạo hoạt động, cập nhật thông tin và quản lý các lượt đăng ký tham gia.
+## Volunteer
+1. Chọn PUBLISHED chưa bắt đầu, còn chỗ theo số APPROVED. Mở chi tiết, nhấn đăng ký và xác nhận. Đơn mới PENDING, chưa phải xác nhận tham gia.
+2. Mở `/my-registrations` xem trạng thái/lịch sử: APPROVED đã duyệt, REJECTED từ chối, CANCELLED đã hủy.
+3. Hủy đơn PENDING/APPROVED của mình trước bắt đầu. Chưa thể đăng ký lại sau khi hủy hoặc từ chối; lịch sử không bị xóa.
+4. `/notifications`: dùng Đánh dấu đã đọc hoặc Đánh dấu tất cả đã đọc, tải lại kiểm tra persistence. Không gửi email trong candidate.
 
-### 1.1. Purpose
+## Organizer
+1. Đăng nhập Organizer, mở `/organizer/dashboard` hoặc `/activities?scope=managed`. Chỉ quản lý hoạt động của mình; không đăng ký tham gia và không tự duyệt công khai.
+2. Chọn Tạo hoạt động mới (`/activities/create`), nhập tên, mô tả, địa điểm, danh mục, bắt đầu/kết thúc, số người. Bắt đầu tương lai, kết thúc sau bắt đầu, số người nguyên 1–100000. Chọn Lưu bản nháp (DRAFT) hoặc Gửi chờ duyệt (PENDING), rồi Lưu hoạt động. Chưa có hạn đăng ký riêng: dùng giờ bắt đầu.
+3. Trong quản lý, gửi DRAFT → PENDING. Chỉ DRAFT/REJECTED được sửa. Nếu bị từ chối: về DRAFT, sửa, gửi lại. PENDING/PUBLISHED không sửa để bỏ qua duyệt; PUBLISHED có thể đóng CLOSED.
+4. Chọn Người đăng ký từ chi tiết hoặc `/organizer/registrations`. Chỉ duyệt/từ chối PENDING khi hoạt động PUBLISHED chưa bắt đầu; nhập lý do nếu cần và xác nhận. Duyệt bị chặn khi APPROVED đủ capacity; PENDING không giữ chỗ.
+5. Chọn Điểm danh (`/activities/<id>/attendance`): chỉ APPROVED được hiển thị. Chọn Có mặt/Vắng, nhập giờ, Lưu điểm danh. Có mặt cho phép 0 đến min(thời lượng,1000) giờ; Vắng ghi 0. Lưu lại thay thế kết quả trước. Candidate chưa chặn điểm danh trước bắt đầu; cần quyết định nghiệp vụ, không dùng để chứng nhận tham gia thực tế.
+6. Dashboard: tổng hoạt động gồm mọi trạng thái; tổng đăng ký gồm CANCELLED; lượt đã duyệt là số đơn APPROVED; giờ SUM ATTENDED. Tải lại số liệu sau thay đổi. Số lượt khác số người duy nhất.
+7. Chỉ xóa DRAFT/PENDING/REJECTED không có bất kỳ registration; công khai thì đóng. Đợt Work này không xóa dữ liệu.
 
-Tài liệu này hướng dẫn người dùng sử dụng các chức năng chính của hệ thống và hỗ trợ quá trình bàn giao sản phẩm.
+## Admin
+1. Dùng tài khoản cấp qua kênh riêng, mở `/admin/dashboard`.
+2. Trong Duyệt hoạt động, xử lý PENDING → PUBLISHED/REJECTED.
+3. Quản lý hoạt động/đăng ký/điểm danh toàn hệ thống; vẫn theo điều kiện trạng thái/ngày giờ. Không tạo đơn tham gia hoặc hủy thay chủ đơn.
+4. Thẻ Tình nguyện viên đếm tài khoản VOLUNTEER ACTIVE; khác số lượt ATTENDED. Giờ chỉ SUM ATTENDED.
+5. Chưa có quản lý/khóa user, đổi role, duyệt tổ chức, CRUD category, gửi notification thủ công.
 
-### 1.2. Target Users
-
-- **Volunteer:** Người tham gia hoạt động tình nguyện.
-- **Admin:** Người quản lý hoạt động và đăng ký.
-
-### 1.3. Website
-
-Production URL:
-
-https://volunteer-community-platform.vercel.app
-
-## 2. Login Guide
-
-### Step 1: Access Website
-
-Mở trình duyệt và truy cập đường dẫn website.
-
-### Step 2: Login
-
-1. Chọn chức năng đăng nhập.
-2. Nhập email và mật khẩu của tài khoản.
-3. Nhấn nút đăng nhập.
-4. Hệ thống xác thực thông tin.
-5. Sau khi đăng nhập thành công, người dùng có thể truy cập các chức năng tương ứng với quyền tài khoản.
-
-### Expected Result
-
-Người dùng đăng nhập thành công và được chuyển đến giao diện phù hợp.
-
-## 3. Volunteer User Guide
-
-### 3.1. View Activities
-
-1. Đăng nhập bằng tài khoản Volunteer.
-2. Truy cập danh sách hoạt động.
-3. Xem các hoạt động được hiển thị.
-4. Chọn một hoạt động để xem thông tin chi tiết.
-
-### Expected Result
-
-Hệ thống hiển thị thông tin hoạt động để Volunteer tham khảo.
-
-### 3.2. Register for an Activity
-
-1. Đăng nhập bằng tài khoản Volunteer.
-2. Chọn hoạt động muốn tham gia.
-3. Xem thông tin chi tiết.
-4. Nhấn nút đăng ký.
-5. Kiểm tra kết quả đăng ký.
-
-### Expected Result
-
-Hệ thống ghi nhận đăng ký hợp lệ và hiển thị kết quả tương ứng.
-
-### 3.3. Check Registration Status
-
-1. Truy cập phần quản lý đăng ký nếu tài khoản được cung cấp chức năng này.
-2. Chọn lượt đăng ký cần kiểm tra.
-3. Xem trạng thái đăng ký được hệ thống hiển thị.
-
-## 4. Admin User Guide
-
-### 4.1. Login as Admin
-
-1. Truy cập website.
-2. Đăng nhập bằng tài khoản Admin.
-3. Mở khu vực quản lý.
-
-### Expected Result
-
-Admin truy cập được các chức năng quản lý theo quyền được cấp.
-
-### 4.2. Create Activity
-
-1. Truy cập chức năng quản lý hoạt động.
-2. Chọn tạo hoạt động.
-3. Nhập các thông tin bắt buộc trên biểu mẫu.
-4. Kiểm tra nội dung đã nhập.
-5. Nhấn nút lưu hoặc tạo hoạt động.
-
-### Expected Result
-
-Hoạt động được tạo thành công khi thông tin hợp lệ và tài khoản có đủ quyền.
-
-### 4.3. Review and Approve Activity
-
-1. Truy cập danh sách hoạt động cần xử lý.
-2. Chọn hoạt động.
-3. Kiểm tra thông tin.
-4. Thực hiện thao tác duyệt theo quyền được cấp.
-5. Kiểm tra trạng thái sau khi cập nhật.
-
-### Expected Result
-
-Hệ thống cập nhật trạng thái hoạt động theo quy trình nghiệp vụ.
-
-### 4.4. Manage Registrations
-
-1. Truy cập khu vực quản lý đăng ký.
-2. Xem danh sách người đăng ký.
-3. Chọn đăng ký cần xử lý.
-4. Thực hiện thao tác quản lý được hệ thống cho phép.
-5. Kiểm tra kết quả cập nhật.
-
-## 5. Business Rules
-
-### BR01 – Role-Based Access
-
-Người dùng chỉ được truy cập các chức năng phù hợp với vai trò được cấp.
-
-### BR02 – Data Validation
-
-Các trường thông tin bắt buộc phải được kiểm tra trước khi lưu.
-
-### BR03 – Activity Status
-
-Trạng thái hoạt động phải tuân theo quy trình nghiệp vụ được nhóm thống nhất.
-
-### BR04 – Activity Registration
-
-Đăng ký tham gia phải đáp ứng các điều kiện nghiệp vụ của hoạt động.
-
-### BR05 – Duplicate Registration
-
-Hệ thống cần ngăn chặn những đăng ký trùng không hợp lệ theo quy định nghiệp vụ.
-
-### BR06 – Management Permissions
-
-Các thao tác quản lý và duyệt phải được giới hạn cho những vai trò có quyền.
-
-## 6. Common Issues
-
-| Vấn đề | Hướng xử lý |
+## Khi gặp lỗi
+| Vấn đề | Xử lý |
 |---|---|
-| Không đăng nhập được | Kiểm tra email, mật khẩu và kết nối mạng |
-| Không thể tạo hoạt động | Kiểm tra quyền tài khoản và các trường bắt buộc |
-| Không đăng ký hoạt động được | Kiểm tra điều kiện đăng ký và trạng thái hoạt động |
-| Không truy cập được trang quản lý | Kiểm tra vai trò của tài khoản |
-| Website không tải được | Kiểm tra mạng và thử tải lại trang |
+| Không đăng nhập | Kiểm tra email/mật khẩu; ghi thông báo lỗi |
+| Không đăng ký | Kiểm tra role, trạng thái, giờ bắt đầu, capacity và đơn đã có |
+| Không sửa/duyệt | Kiểm tra ownership/trạng thái, tải lại dữ liệu |
+| Điểm danh rỗng | Kiểm tra có APPROVED hay chưa |
+| Giờ bị từ chối | Nhập số không âm, không vượt thời lượng/1000 |
+| Không tải/lưu | Ghi URL, thời gian, bước và ảnh lỗi; kiểm tra lại sau refresh |
 
-Nếu lỗi vẫn xảy ra, người dùng cần gửi thông tin lỗi cho nhóm quản trị hoặc nhóm phát triển.
-
-## 7. User Acceptance Checklist
-
-| ID | Test Scenario | Status |
-|---|---|---|
-| UAT01 | Login successfully | Passed |
-| UAT02 | View activity list | Passed |
-| UAT03 | View activity details | Passed |
-| UAT04 | Create an activity | Passed |
-| UAT05 | Approve an activity | Passed |
-| UAT06 | Register for an activity | Passed |
-| UAT07 | Manage registrations | Passed |
-
-Các trạng thái trên phản ánh kết quả kiểm tra nghiệp vụ đã được nhóm xác nhận. Kiểm thử hồi quy, bảo mật và khả năng sử dụng ngoài nhóm cần được ghi nhận riêng.
-
-## 8. Release Notes
-
-Tài liệu được chuẩn bị cho giai đoạn Sprint 4 – Release.
-
-Các nội dung cần xác nhận trước bàn giao:
-
-- Website production hoạt động ổn định.
-- Các chức năng nghiệp vụ chính hoạt động đúng.
-- Tài liệu hướng dẫn sử dụng được cập nhật.
-- Các lỗi quan trọng đã được xử lý.
-- Phản hồi người dùng thử được tổng hợp.
-- Nhóm hoàn thiện tài liệu kỹ thuật và demo cuối kỳ.
-
-## 9. Conclusion
-
-Tài liệu User Guide cung cấp hướng dẫn sử dụng những chức năng chính của Volunteer Community Platform cho Volunteer và Admin.
-
-Tài liệu hỗ trợ người dùng thao tác trên hệ thống và giúp nhóm chuẩn bị cho quá trình nghiệm thu, bàn giao sản phẩm cuối kỳ.
-
-**Document Status:** Draft – Pending final release review.
+Báo cho Phúc/Kiên qua kênh nhóm đã thống nhất; che dữ liệu riêng, không gửi mật khẩu/token. Các Passed của bản 1 chưa kèm SHA/URL/người kiểm tra: xem ma trận UAT, chờ bổ sung bằng chứng.

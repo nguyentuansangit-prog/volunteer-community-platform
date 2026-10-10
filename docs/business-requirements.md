@@ -88,3 +88,21 @@ Hiện nay, việc tổ chức và tham gia các hoạt động tình nguyện c
 * **Acceptance Criteria:**
   * AC8.1: Bắn thông báo ngay khi đơn đăng ký được `APPROVED` hoặc `REJECTED`.
   * AC8.2: Bắn thông báo cho Đơn vị tổ chức khi bài đăng được Admin phê duyệt hoặc từ chối.
+
+## Đối chiếu implementation tuần 8 (09/10/2026)
+
+Các User Story/AC phía trên là yêu cầu gốc, giữ lại để truy vết. Candidate PR #52 SHA `b59a335a3a400b0deb8a27677966fae78647d8eb` chưa merge/production; mô tả code không phải tự phê duyệt scope.
+
+| Yêu cầu | Candidate / gap |
+|---|---|
+| US-01 | Có register Volunteer/Organizer; profile chỉ xem, chưa sửa |
+| US-02 | Keyword title/location/description; PUBLISHED mặc định, CLOSED lọc công khai; chưa filter category; nhãn thời gian khác workflow status |
+| US-03 | Chỉ Volunteer tạo đơn; PENDING/APPROVED hủy trước start; cutoff=startDate, không deadline riêng; chưa đăng ký lại |
+| US-04 | DRAFT/PENDING thay tên PENDING_APPROVAL; có danh mục/địa điểm, chưa deadline riêng |
+| US-05 | Duyệt đơn có ownership/capacity/time; notification trong ứng dụng |
+| US-06 | Có attendance/hours; chưa tổng giờ trên profile, chưa gate thời điểm điểm danh |
+| US-07 | Tổng activities/registrations gồm mọi status; lượt tham gia khác unique user; xem công thức rules |
+| US-08 | Bốn trigger trong ứng dụng; chưa email |
+| Admin mở rộng | Chưa duyệt tổ chức/CRUD user/category/đổi role |
+
+Quyền thực tế tại [role-permission](role-permission.md); [Business Rules hợp nhất đề xuất](week7-business-rules.md); [quyết định và AC](week8-business-workflow-review.md). Phúc/Sang phải xác nhận gap giữ ngoài release hay yêu cầu sửa; Trân/Kiên xác nhận contract và test, không tự đánh dấu US hoàn tất.
