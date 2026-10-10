@@ -41,7 +41,7 @@ test("existing cookie cannot retain revoked role or access after account blockin
       body: new URLSearchParams({ csrfToken: csrf.csrfToken, email, password: "test-only-123456" }),
     });
     assert.equal((await (await request("/api/auth/session")).json()).user.role, "ADMIN");
-    assert.match(await (await request("/admin")).text(), /Admin Dashboard/);
+    assert.match(await (await request("/admin")).text(), /Bảng điều khiển Quản trị viên/);
     await db.query('UPDATE "User" SET "role" = $1 WHERE "id" = $2', ["VOLUNTEER", id]);
     assert.match(await (await request("/admin")).text(), /Không có quyền truy cập/);
     assert.equal((await request("/api/activities?scope=managed")).status, 403);

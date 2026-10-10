@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import LogoutButton from "@/components/logout-button";
 
 type User = { id: string; name: string; role: "VOLUNTEER" | "ORGANIZER" | "ADMIN" };
 type Category = { id: string; name: string };
@@ -19,6 +19,7 @@ type Registration = {
   history: { id: string; fromStatus: string | null; toStatus: string; reason: string | null; createdAt: string }[];
 };
 type Tab = "public" | "mine" | "managed";
+type ActivityPage = { items: Activity[]; pagination: { page: number; pageSize: number; total: number; totalPages: number } };
 const labels: Record<string, string> = {
   DRAFT: "Bản nháp", PENDING: "Chờ duyệt", PUBLISHED: "Đã công khai",
   REJECTED: "Đã từ chối", CLOSED: "Đã đóng", APPROVED: "Đã duyệt", CANCELLED: "Đã hủy",
@@ -42,7 +43,7 @@ const errors: Record<string, string> = {
   CONFLICT: "Dữ liệu đã thay đổi. Vui lòng kiểm tra lại trước khi thử lại.",
   INTERNAL_ERROR: "Không thể tải hoặc lưu dữ liệu. Vui lòng thử lại sau.",
 };
-const primary = "rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50";
+const primary = "rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50";
 const secondary = "rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
 const field = "mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900";
 const dateLabel = (value: string) => new Date(value).toLocaleString("vi-VN");
@@ -81,10 +82,13 @@ function History({ registration }: { registration: Registration }) {
   </details>;
 }
 
-export default function ActivityWorkspace({ user }: { user: User | null }) {
+export default function ActivityWorkspace({ user, initialTab = "public", initialStatus = "", compact = false, locations = [] }: { user: User | null; initialTab?: Tab; initialStatus?: string; compact?: boolean; locations?: string[] }) {
+  const ContentTag = compact ? "div" : "main";
   const canManage = !!user && user.role !== "VOLUNTEER";
-  const [tab, setTab] = useState<Tab>("public");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState({ keyword: "", location: "", status: initialStatus });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 20, total: 0, totalPages: 0 });
   const [activities, setActivities] = useState<Activity[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -102,13 +106,13 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
   const focusConfirmation = useCallback((element: HTMLButtonElement | null) => { element?.focus(); }, []);
 
   const fetchData = useCallback((signal?: AbortSignal) => Promise.all([
-    tab === "mine" ? Promise.resolve([] as Activity[]) : api<Activity[]>(`/api/activities?scope=${tab}&page=${page}`, { signal }),
+    tab === "mine" ? Promise.resolve({ items: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 } } as ActivityPage) : api<ActivityPage>("/api/activities?" + new URLSearchParams({ scope: tab, page: String(page), meta: "1", q: filters.keyword, location: filters.location, ...(filters.status ? { status: filters.status } : {}) }), { signal }),
     user ? allRegistrations("/api/registrations", signal) : Promise.resolve([] as Registration[]),
     api<Category[]>("/api/categories", { signal }),
-  ]), [tab, page, user]);
-  const applyData = useCallback(([items, mine, options]: [Activity[], Registration[], Category[]]) => {
+  ]), [tab, page, user, filters]);
+  const applyData = useCallback(([result, mine, options]: [ActivityPage, Registration[], Category[]]) => {
     setLoadFailed(false); setNow(Date.now());
-    setActivities(items); setRegistrations(mine); setCategories(options);
+    setActivities(result.items); setPagination(result.pagination); setRegistrations(mine); setCategories(options);
   }, []);
   const applyFailure = useCallback((error: unknown) => {
     setLoadFailed(true);
@@ -213,36 +217,25 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
   }
   function switchTab(next: Tab) {
     if (tab !== next) setLoading(true);
-    setTab(next); setPage(1); setNotice(null); setParticipants(null); setEditor(null); setConfirmation(null);
+    setTab(next); setPage(1); setFilters({ keyword: "", location: "", status: "" }); setNotice(null); setParticipants(null); setEditor(null); setConfirmation(null);
   }
   const editing = editor && editor !== "new" ? editor : null;
 
-  return <div className="min-h-screen bg-slate-50 text-slate-900">
-    <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-8">
-        <Link href="/" className="text-lg font-extrabold text-emerald-800">Volunteer Community</Link>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          {user ? <><span>{user.name} · {user.role === "ADMIN" ? "Quản trị viên" : user.role === "ORGANIZER" ? "Nhà tổ chức" : "Tình nguyện viên"}</span><LogoutButton /></>
-            : <Link href="/login" className={primary}>Đăng nhập</Link>}
-        </div>
-      </div>
-    </header>
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-8">
-      <div className="mb-8 max-w-2xl">
-        <p className="mb-2 text-sm font-semibold text-emerald-700">Cộng đồng tình nguyện</p>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Hoạt động tình nguyện</h1>
-        <p className="mt-3 text-slate-600">Lựa chọn hoạt động phù hợp và cùng chung tay tạo nên những giá trị tốt đẹp cho cộng đồng.</p>
-      </div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <nav aria-label="Danh sách hoạt động" className="flex flex-wrap gap-2">
-          {([["public", "Khám phá"], ...(user ? [["mine", "Đăng ký của tôi"]] : []), ...(canManage ? [["managed", "Quản lý hoạt động"]] : [])] as [Tab, string][]).map(([key, label]) =>
-            <button key={key} aria-pressed={tab === key} disabled={busy} onClick={() => switchTab(key)} className={tab === key ? primary : secondary}>{label}</button>)}
-        </nav>
-        {canManage && <button className={primary} disabled={busy || loading || loadFailed || !categories.length} onClick={() => { setEditor("new"); setParticipants(null); }}>Tạo hoạt động</button>}
-      </div>
+  return <div className={(compact ? "" : "min-h-screen ") + "bg-slate-50 text-slate-900"}>
+    <ContentTag className={"mx-auto px-4 py-12 " + (tab === "mine" ? "max-w-4xl" : "max-w-7xl")}>
+      {tab === "mine" ? <div className="mb-8 flex flex-wrap items-center justify-between gap-4"><div><span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700">Cá nhân</span><h1 className="mt-2 text-3xl font-black">Đăng ký của tôi</h1></div><Link href="/activities" className="font-semibold text-emerald-600 hover:underline">← Quay lại danh sách</Link></div> : <>
+        {!compact && <div className="mx-auto mb-12 max-w-3xl text-center"><span className="mb-4 inline-block rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-emerald-700">Cộng đồng tình nguyện</span><h1 className="text-3xl font-black tracking-tight md:text-4xl">{tab === "managed" ? "Quản lý hoạt động" : "Hoạt động tình nguyện"}</h1><p className="mt-3 leading-relaxed text-slate-500">Lựa chọn hoạt động phù hợp và cùng chung tay tạo nên những giá trị tốt đẹp cho cộng đồng.</p></div>}
+        <div className="mb-8 flex flex-col gap-4 rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">{user?.name.charAt(0).toUpperCase() ?? "G"}</span><div><p className="text-xs font-medium text-slate-400">{user ? "Đang đăng nhập · " + ({VOLUNTEER:"Tình nguyện viên",ORGANIZER:"Ban tổ chức",ADMIN:"Quản trị viên"}[user.role]) : "Khách truy cập"}</p><p className="font-bold text-slate-800">{user?.name ?? "Chưa đăng nhập"}</p></div></div><Link href={canManage ? user?.role === "ADMIN" ? "/admin" : "/organizer/dashboard" : user ? "/my-registrations" : "/login"} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800">{canManage ? "🛡️ Về Dashboard" : "📋 Đăng ký của tôi"}</Link></div>
+        <form className="mx-auto mb-10 max-w-3xl space-y-4" onSubmit={(event) => {event.preventDefault(); const data=new FormData(event.currentTarget);setLoading(true);setPage(1);setFilters({keyword:String(data.get("keyword") ?? "").trim(),location:String(data.get("filterLocation") ?? "").trim(),status:String(data.get("filterStatus") ?? "")});}} key={tab}>
+          <div className="relative"><span aria-hidden="true" className="absolute inset-y-0 left-0 flex items-center pl-4 text-lg text-slate-400">🔍</span><input aria-label="Tìm hoạt động" name="keyword" placeholder="Tìm hoạt động theo tên hoặc mô tả..." maxLength={200} className="w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 pr-4 text-slate-900 shadow-sm outline-none transition focus:ring-2 focus:ring-emerald-500" /></div>
+          <div className="grid gap-4 sm:grid-cols-2"><label className="sr-only" htmlFor="filter-location">Lọc địa điểm</label>{tab === "public" ? <select id="filter-location" name="filterLocation" className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 font-medium text-slate-700 shadow-sm focus:ring-2 focus:ring-emerald-500"><option value="">📍 Tất cả địa điểm</option>{locations.map(location=><option key={location} value={location}>{location}</option>)}</select> : <input id="filter-location" name="filterLocation" placeholder="📍 Tất cả địa điểm · nhập để lọc" maxLength={500} className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 font-medium text-slate-700 shadow-sm focus:ring-2 focus:ring-emerald-500" />}<label className="sr-only" htmlFor="filter-status">Lọc trạng thái</label><select id="filter-status" name="filterStatus" defaultValue={initialStatus} className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 font-medium text-slate-700 shadow-sm focus:ring-2 focus:ring-emerald-500"><option value="">📌 Tất cả trạng thái</option>{(tab === "managed" ? ["DRAFT","PENDING","PUBLISHED","REJECTED","CLOSED"] : ["PUBLISHED","CLOSED"]).map(status=><option key={status} value={status}>{labels[status]}</option>)}</select></div>
+          <div className="flex justify-end gap-2"><button className={primary} disabled={busy || loading}>Tìm kiếm</button><button type="reset" className={secondary} disabled={busy || loading} onClick={()=>{setLoading(true);setPage(1);setFilters({keyword:"",location:"",status:""});}}>Xóa bộ lọc</button></div>
+        </form>
+        {canManage && <div className="mb-8 flex flex-wrap items-center justify-between gap-3"><nav aria-label="Danh sách hoạt động" className="flex flex-wrap gap-2">{([["public","Khám phá"],["managed","Quản lý hoạt động"]] as [Tab,string][]).map(([key,label])=><button key={key} aria-pressed={tab === key} disabled={busy} onClick={()=>switchTab(key)} className={tab===key ? primary : secondary}>{label}</button>)}</nav><Link href="/activities/create" className={primary}>➕ Tạo hoạt động</Link></div>}
+      </>}
       {notice && <div role={notice.error ? "alert" : "status"} className={`mb-6 rounded-xl border p-4 ${notice.error ? "border-red-200 bg-red-50 text-red-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>{notice.message}</div>}
-      {confirmation && <section role="alertdialog" aria-modal="false" aria-labelledby="confirm-title" aria-describedby="confirm-description" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5">
-        <h2 id="confirm-title" className="font-bold">Xác nhận thao tác</h2>
+      {confirmation && <dialog open ref={element => { if(element && !element.matches(":modal")) {element.close();element.showModal();} }} onCancel={event=>{event.preventDefault();if(!busy)setConfirmation(null);}} aria-labelledby="confirm-title" aria-describedby="confirm-description" className="fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-white p-7 text-slate-900 shadow-2xl backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm">
+        <div aria-hidden="true" className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-2xl">🤝</div><h2 id="confirm-title" className="font-bold">{confirmation.method === "POST" ? "Xác nhận đăng ký" : "Xác nhận thao tác"}</h2>
         <p id="confirm-description" className="mt-2">{confirmation.prompt}</p>
         <div className="mt-4 flex gap-2">
           <button className={primary} disabled={busy} onClick={async () => {
@@ -251,7 +244,7 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
           }}>Xác nhận</button>
           <button ref={focusConfirmation} className={secondary} disabled={busy} onClick={() => setConfirmation(null)}>Quay lại</button>
         </div>
-      </section>}
+      </dialog>}
       {loadFailed && <button onClick={() => { setLoading(true); void load(); }} className={secondary} disabled={busy}>Thử tải lại</button>}
       {canManage && !loading && !loadFailed && !categories.length && <p className="mb-6 text-slate-600">Chưa có danh mục. Cần thiết lập danh mục trước khi tạo hoạt động.</p>}
       {editor && <section className="mb-8 rounded-2xl border border-emerald-200 bg-white p-5 sm:p-8" aria-labelledby="editor-title">
@@ -287,7 +280,7 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
         <section aria-label="Đăng ký của tôi" className="space-y-4">
           {!registrations.length && <p className="rounded-2xl border border-slate-200 bg-white p-8 text-slate-600">Bạn chưa đăng ký hoạt động nào.</p>}
           {registrations.map((registration) => <article key={registration.id} className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-lg font-bold">{registration.activity.title}</h2>
+            <h2 className="text-xl font-bold">{registration.activity.title}</h2><Link href={`/activities/${registration.activity.id}`} className="mt-3 inline-block rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-800">Xem chi tiết</Link>
             <p className="mt-2 text-sm text-slate-600">{dateLabel(registration.activity.startDate)}</p>
             <p className="mt-2 font-medium text-emerald-800">{labels[registration.status]}</p>
             {["PENDING", "APPROVED"].includes(registration.status) && new Date(registration.activity.startDate).getTime() > now &&
@@ -302,24 +295,26 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
         </section> :
         <section aria-label={tab === "managed" ? "Hoạt động quản lý" : "Hoạt động công khai"}>
           {!activities.length && <p className="rounded-2xl border border-slate-200 bg-white p-8 text-slate-600">Chưa có hoạt động trong danh sách này.</p>}
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {activities.map((activity) => {
               const mine = registrations.find((registration) => registration.activityId === activity.id);
-              const future = new Date(activity.startDate).getTime() > now;
+              const future = activity.status === "PUBLISHED" && new Date(activity.startDate).getTime() > now;
               const full = activity._count.registrations >= activity.maxParticipants;
-              return <article key={activity.id} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex flex-wrap gap-2 text-xs font-semibold"><span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-800">{activity.category.name}</span><span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">{labels[activity.status]}</span></div>
-                <h2 className="text-xl font-bold">{activity.title}</h2>
-                <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-600">{activity.description}</p>
-                <dl className="my-4 space-y-2 text-sm"><div><dt className="font-semibold">Địa điểm</dt><dd>{activity.location}</dd></div><div><dt className="font-semibold">Thời gian</dt><dd>{dateLabel(activity.startDate)} – {dateLabel(activity.endDate)}</dd></div><div><dt className="font-semibold">Số người đã duyệt</dt><dd>{activity._count.registrations}/{activity.maxParticipants}{full ? " · Đã đủ chỗ" : ""}</dd></div></dl>
+              return <article key={activity.id} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"><Link href={`/activities/${activity.id}`} className="relative -mx-6 -mt-6 mb-6 block h-48 overflow-hidden bg-emerald-50" aria-label={`Xem chi tiết ${activity.title}`}><Image src="https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?auto=format&fit=crop&w=800&q=80" alt="" fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw" className="object-cover transition duration-500 group-hover:scale-105" /><span className="absolute right-3 top-3 rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white">{labels[activity.status]}</span></Link>
+
+                <h2 className="text-xl font-bold"><Link href={`/activities/${activity.id}`} className="hover:text-emerald-700">{activity.title}</Link></h2>
+                <p className="mt-3 line-clamp-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-600">{activity.description}</p>
+                <dl className="my-4 space-y-2 border-t border-slate-100 pt-4 text-sm text-slate-500"><div><dt className="inline font-semibold text-emerald-600">📍 Địa điểm: </dt><dd className="inline">{activity.location}</dd></div><div><dt className="inline font-semibold text-emerald-600">📅 Thời gian: </dt><dd className="inline">{dateLabel(activity.startDate)} – {dateLabel(activity.endDate)}</dd></div><div><dt className="inline font-semibold text-emerald-600">👥 Số lượng đã duyệt: </dt><dd className="inline">{activity._count.registrations}/{activity.maxParticipants} người</dd></div></dl><div className="mb-5"><p className="mb-3 text-sm font-bold text-slate-800">Đăng ký của bạn</p><p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-500">{mine ? labels[mine.status] : user ? "Bạn chưa đăng ký hoạt động này." : "Đăng nhập để theo dõi đăng ký."}</p></div>
                 <div className="mt-auto space-y-3 border-t border-slate-100 pt-4">
-                  {tab === "public" && (!user ? <Link href="/login" className={primary + " inline-block"}>Đăng nhập để đăng ký</Link> : mine ?
+                  {tab === "public" && (!user ? <Link href="/login" className={primary + " inline-block"}>Đăng nhập để đăng ký</Link> : user.role !== "VOLUNTEER" ?
+                    <p className="text-sm text-slate-600">Chỉ tài khoản tình nguyện viên có thể đăng ký tham gia hoạt động.</p> : mine ?
                     <p className="text-sm font-semibold text-emerald-800">Đăng ký của bạn: {labels[mine.status]} · Xem trong “Đăng ký của tôi”</p> :
-                    <button className={primary} disabled={busy || full || !future} onClick={() => void mutate(`/api/activities/${activity.id}/registrations`, "POST", undefined, "Đã gửi đăng ký. Vui lòng chờ nhà tổ chức duyệt.")}>{!future ? "Đã hết hạn đăng ký" : full ? "Đã đủ chỗ" : "Đăng ký tham gia"}</button>)}
+                    <button className={primary + " w-full py-3 shadow-md shadow-emerald-600/20"} disabled={busy || full || !future} onClick={() => setConfirmation({path:`/api/activities/${activity.id}/registrations`,method:"POST",message:"Đã gửi đăng ký. Vui lòng chờ nhà tổ chức duyệt.",prompt:`Đăng ký tham gia “${activity.title}” với tài khoản ${user.name}?`})}>{!future ? "Đã hết hạn đăng ký" : full ? "Đã đủ chỗ" : "Đăng ký tham gia"}</button>)}
                   {tab === "managed" && <>
                     <div className="flex flex-wrap gap-2">
-                      {["DRAFT", "REJECTED"].includes(activity.status) && <button disabled={busy} className={secondary} onClick={() => { setEditor(activity); setParticipants(null); }}>Chỉnh sửa</button>}
+                      {["DRAFT", "REJECTED"].includes(activity.status) && <Link className={secondary} href={`/activities/${activity.id}/edit`}>Chỉnh sửa</Link>}
                       <button disabled={busy} className={secondary} onClick={() => void openParticipants(activity)}>Người đăng ký</button>
+                      <Link href={`/activities/${activity.id}/attendance`} className={secondary}>Điểm danh</Link>
                       {["DRAFT", "PENDING", "REJECTED"].includes(activity.status) && <button disabled={busy} className={secondary} onClick={() => {
                         setConfirmation({
                           path: `/api/activities/${activity.id}`, method: "DELETE",
@@ -341,9 +336,8 @@ export default function ActivityWorkspace({ user }: { user: User | null }) {
               </article>;
             })}
           </div>
-          <div className="mt-6 flex items-center justify-center gap-4"><button className={secondary} disabled={busy || page === 1} onClick={() => { setLoading(true); setPage(page - 1); }}>Trang trước</button><span className="text-sm">Trang {page}</span><button className={secondary} disabled={busy || activities.length < 50} onClick={() => { setLoading(true); setPage(page + 1); }}>Trang sau</button></div>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4"><button className={secondary} disabled={busy || page === 1} onClick={() => { setLoading(true); setPage(page - 1); }}>Trang trước</button><span className="text-sm">Trang {page} / {Math.max(1, pagination.totalPages)} · {pagination.total} hoạt động</span><button className={secondary} disabled={busy || page >= pagination.totalPages} onClick={() => { setLoading(true); setPage(page + 1); }}>Trang sau</button></div>
         </section>)}
-    </main>
-    <footer className="mx-auto max-w-7xl px-4 py-8 text-sm text-slate-500 sm:px-8">Volunteer Community · Cùng nhau vì cộng đồng</footer>
+    </ContentTag>
   </div>;
 }

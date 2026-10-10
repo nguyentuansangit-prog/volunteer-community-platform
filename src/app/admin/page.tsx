@@ -1,49 +1,11 @@
-import { auth } from "../../../auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { currentAccount } from "@/lib/current-account";
+import DashboardPanel from "@/components/dashboard-panel";
+import { auth } from "../../../auth";
 
 export default async function AdminPage() {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true, status: true } });
-  if (user?.status !== "ACTIVE" || user.role !== "ADMIN") {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="rounded-2xl bg-white p-8 shadow">
-          <h1 className="mb-4 text-2xl font-bold text-red-600">
-            Không có quyền truy cập
-          </h1>
-
-          <p>
-            Tài khoản hiện tại có role:
-            <strong> {user?.role ?? "Không còn hoạt động"}</strong>
-          </p>
-        </div>
-      </main>
-    );
-  }
-
-  return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="rounded-2xl bg-white p-8 shadow">
-        <h1 className="text-2xl font-bold">
-          Admin Dashboard
-        </h1>
-
-        <p className="mt-4">
-          Xin chào {session.user.name}
-        </p>
-
-        <p>
-          Role: {session.user.role}
-        </p>
-        <Link href="/activities" className="mt-4 block font-semibold text-emerald-700">Xét duyệt và quản lý hoạt động →</Link>
-      </div>
-    </main>
-  );
+  const user = await currentAccount();
+  if (!await auth()) redirect("/login");
+  if (!user || user.role !== "ADMIN") return <main className="p-8"><h1 className="text-2xl font-bold">Không có quyền truy cập</h1></main>;
+  return <main className="min-h-[70vh] bg-slate-900 px-4 py-12 text-white sm:px-8"><div className="mx-auto max-w-6xl"><p className="text-sm font-semibold text-purple-400">Admin Portal</p><h1 className="mt-2 text-3xl font-black md:text-4xl">Bảng điều khiển Quản trị viên</h1><p className="mt-3 text-slate-300">Xin chào {user.name}. Tổng quan hoạt động tình nguyện trên toàn hệ thống.</p><DashboardPanel role="ADMIN" user={{id:user.id,name:user.name,role:user.role as "ORGANIZER"|"ADMIN"}} /></div></main>;
 }

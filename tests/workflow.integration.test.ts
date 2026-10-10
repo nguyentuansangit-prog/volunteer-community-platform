@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "../src/lib/prisma";
 import {
   changeActivityStatus, changeRegistrationStatus, createActivity, deleteActivity,
-  getActivity, listActivities, listRegistrations, registerActivity, updateActivity,
+  getActivity, listActivities, listActivitiesPage, listRegistrations, registerActivity, updateActivity,
 } from "../src/lib/workflow";
 import { WorkflowError } from "../src/lib/workflow-rules";
 
@@ -43,6 +43,11 @@ test("PostgreSQL workflow, permissions, audit history and concurrent capacity en
     await fails(changeActivityStatus(owner, activity.id, { status: "PUBLISHED" }), "FORBIDDEN");
     await changeActivityStatus(admin, activity.id, { status: "PUBLISHED" });
     assert.equal((await getActivity(null, activity.id)).id, activity.id);
+    for (const actor of [owner, other, admin]) {
+      await fails(registerActivity(actor, activity.id), "FORBIDDEN");
+      assert.equal(await prisma.registration.count({ where: { userId: actor.id, activityId: activity.id } }), 0);
+      assert.equal(await prisma.registrationStatusHistory.count({ where: { actorId: actor.id } }), 0);
+    }
     assert.ok((await listActivities(null, "public")).every((item) => item.status === "PUBLISHED"));
     await fails(updateActivity(owner, activity.id, { title: "Bypass moderation" }), "ACTIVITY_LOCKED");
     await fails(updateActivity(other, activity.id, { title: "Other owner" }), "FORBIDDEN");
@@ -84,6 +89,11 @@ test("PostgreSQL workflow, permissions, audit history and concurrent capacity en
     assert.equal((await listRegistrations(owner, activity.id)).length, 3);
     await fails(deleteActivity(owner, activity.id), "ACTIVITY_LOCKED");
     await changeActivityStatus(owner, activity.id, { status: "CLOSED" });
+    assert.equal((await getActivity(null, activity.id)).status, "CLOSED");
+    const closed = await listActivitiesPage(null, "public", {status:"CLOSED"});
+    assert.ok(closed.items.some(item => item.id === activity.id));
+    assert.ok(closed.items.every(item => item.status === "CLOSED"));
+    await fails(listActivitiesPage(null, "public", {status:"DRAFT"}), "VALIDATION_ERROR");
     await fails(registerActivity(third, activity.id), "REGISTRATION_CLOSED");
     const draft = await createActivity(owner, { ...input, status: "DRAFT" });
     await updateActivity(owner, draft.id, { title: "Updated draft" });

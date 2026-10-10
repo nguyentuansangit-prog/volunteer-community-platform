@@ -335,3 +335,5 @@ Ký hiệu:
 - `FK`: Foreign Key
 
 
+
+> Tài liệu trên là thiết kế ban đầu. Schema triển khai tuần 8 (String/cuid IDs, Attendance, history và enum) được đối chiếu ở [Backend contract tuần 8](week8-backend-contract.md); không dùng ERD ban đầu để tạo migration.

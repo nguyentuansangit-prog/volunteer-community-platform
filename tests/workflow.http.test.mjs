@@ -43,6 +43,13 @@ test("HTTP session authentication, origin checks, validation and activity CRUD",
   assert.equal((await volunteer("/api/registrations")).status, 200);
   assert.equal((await volunteer("/api/activities", { method: "POST", body: "{}" })).status, 403);
   const organizer = await client("organizer@test.com");
+  const admin = await client("admin@test.com");
+  for (const request of [organizer, admin]) {
+    assert.equal((await request("/api/activities/demo-activity-published/registrations", { method: "POST" })).status, 403);
+    const detail = await (await request("/activities/demo-activity-published")).text();
+    assert.match(detail, /Chỉ tài khoản tình nguyện viên/);
+    assert.equal(detail.includes("Đăng ký tham gia"), false);
+  }
   assert.equal((await organizer("/api/activities", { method: "POST", body: "invalid" })).status, 400);
   assert.equal((await organizer("/api/activities", { method: "POST", body: "{}" })).status, 422);
   const categories = (await (await guest("/api/categories")).json()).data;
