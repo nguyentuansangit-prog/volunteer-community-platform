@@ -14,7 +14,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       async authorize(credentials) {
         const parsedCredentials = z
           .object({
-            email: z.string().email(),
+            email: z.string().trim().toLowerCase().email(),
             password: z.string().min(6),
           })
           .safeParse(credentials);
@@ -25,9 +25,9 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
 
         const { email, password } = parsedCredentials.data;
 
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findFirst({
           where: {
-            email,
+            email: { equals: email, mode: "insensitive" },
           },
         });
 
