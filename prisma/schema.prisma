@@ -163,3 +163,12 @@ model Notification {
 
   @@index([userId, isRead])
 }
+
+// Shared across serverless instances; contains only keyed digests, never emails.
+model AuthRateLimit {
+  key       String   @id
+  attempts  Int
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}

@@ -28,7 +28,7 @@ export default function LoginForm({ registered = false, organizer = false }: { r
     });
 
     if (result?.error) {
-      setError("Email hoặc mật khẩu không chính xác");
+      setError(result.code === "rate_limited" ? "Bạn đã thử quá nhiều lần. Vui lòng chờ tối đa 15 phút rồi thử lại." : "Email hoặc mật khẩu không chính xác");
       return;
     }
 
