@@ -63,12 +63,22 @@ export async function changeActivityStatus(actor: Actor, id: string, input: unkn
     const activity = await lockedActivity(tx, id);
     validateActivityTransition(actor, activity.organizerId, activity.status, data.status);
     if (["PENDING", "PUBLISHED"].includes(data.status)) validateDates(activity.startDate, activity.endDate);
-    return tx.activity.update({
+    const updated = await tx.activity.update({
       where: { id },
       data: { status: data.status, history: { create: {
         actorId: actor.id, fromStatus: activity.status, toStatus: data.status, reason: data.reason,
       } } },
     });
+    if (activity.status === "PENDING" && ["PUBLISHED", "REJECTED"].includes(data.status)) {
+      await tx.notification.create({
+        data: {
+          userId: activity.organizerId,
+          title: data.status === "PUBLISHED" ? "Hoạt động đã được duyệt" : "Hoạt động bị từ chối",
+          message: `Hoạt động "${activity.title}" đã chuyển sang trạng thái ${data.status}.`,
+        },
+      });
+    }
+    return updated;
   });
 }
 
@@ -97,32 +107,83 @@ export async function changeRegistrationStatus(actor: Actor, id: string, input: 
     if (data.status === "APPROVED") {
       requireRule(await approvedCount(tx, activity.id) < activity.maxParticipants, 409, "CAPACITY_FULL", "Activity has reached capacity");
     }
-    return tx.registration.update({
+    const updated = await tx.registration.update({
       where: { id },
       data: { status: data.status, history: { create: {
         actorId: actor.id, fromStatus: registration.status, toStatus: data.status, reason: data.reason,
       } } },
     });
+    if (data.status === "CANCELLED") {
+      await tx.attendance.deleteMany({ where: { registrationId: id } });
+    }
+    if (registration.status === "PENDING" && ["APPROVED", "REJECTED"].includes(data.status)) {
+      await tx.notification.create({
+        data: {
+          userId: registration.userId,
+          title: data.status === "APPROVED" ? "Đăng ký đã được duyệt" : "Đăng ký bị từ chối",
+          message: `Đăng ký của bạn cho hoạt động "${activity.title}" đã chuyển sang trạng thái ${data.status}.`,
+        },
+      });
+    }
+    return updated;
   });
 }
 
+export type ActivityListFilters = {
+  page?: number;
+  keyword?: string;
+  location?: string;
+  status?: "DRAFT" | "PENDING" | "PUBLISHED" | "REJECTED" | "CLOSED";
+};
+
 export async function listActivities(actor: Actor | null, scope: string, page = 1) {
+  const result = await listActivitiesPage(actor, scope, { page }, 50);
+  return result.items;
+}
+
+export async function listActivitiesPage(actor: Actor | null, scope: string, filters: ActivityListFilters = {}, take = 20) {
+  const page = filters.page ?? 1;
   let where: Prisma.ActivityWhereInput = { status: "PUBLISHED" };
+  if (scope === "public" && filters.status) {
+    requireRule(["PUBLISHED", "CLOSED"].includes(filters.status), 400, "VALIDATION_ERROR", "Only public statuses can be filtered");
+    where = { status: filters.status };
+  }
   if (scope === "managed") {
     requireRule(actor && actor.role !== "VOLUNTEER", 403, "FORBIDDEN", "Organizer role required");
     where = actor.role === "ADMIN" ? {} : { organizerId: actor.id };
+    if (filters.status) where = { ...where, status: filters.status };
   }
-  return prisma.activity.findMany({
-    where, include: { category: true, _count: { select: { registrations: { where: { status: "APPROVED" } } } } },
-    orderBy: [{ startDate: "asc" }, { id: "asc" }], skip: (page - 1) * 50, take: 50,
-  });
+  if (filters.keyword) {
+    where = {
+      ...where,
+      OR: [
+        { title: { contains: filters.keyword, mode: "insensitive" } },
+        { location: { contains: filters.keyword, mode: "insensitive" } },
+        { description: { contains: filters.keyword, mode: "insensitive" } },
+      ],
+    };
+  }
+  if (filters.location) {
+    where = { ...where, location: { contains: filters.location, mode: "insensitive" } };
+  }
+  const [items, total] = await Promise.all([
+    prisma.activity.findMany({
+      where,
+      include: { category: true, _count: { select: { registrations: { where: { status: "APPROVED" } } } } },
+      orderBy: [{ startDate: "asc" }, { id: "asc" }],
+      skip: (page - 1) * take,
+      take,
+    }),
+    prisma.activity.count({ where }),
+  ]);
+  return { items, pagination: { page, pageSize: take, total, totalPages: Math.ceil(total / take) } };
 }
 
 export async function getActivity(actor: Actor | null, id: string) {
   const activity = await prisma.activity.findUnique({
     where: { id }, include: { category: true, _count: { select: { registrations: { where: { status: "APPROVED" } } } } },
   });
-  requireRule(activity && (activity.status === "PUBLISHED" || (actor && canManage(actor, activity.organizerId))), 404, "NOT_FOUND", "Activity not found");
+  requireRule(activity && (["PUBLISHED", "CLOSED"].includes(activity.status) || (actor && canManage(actor, activity.organizerId))), 404, "NOT_FOUND", "Activity not found");
   return activity;
 }
 

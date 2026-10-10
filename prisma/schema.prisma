@@ -29,6 +29,8 @@ model User {
   notifications       Notification[]
   registrationHistory RegistrationStatusHistory[]
   activityHistory     ActivityStatusHistory[]
+  attendance          Attendance[]                 @relation("AttendanceUser")
+  attendanceRecorded  Attendance[]                 @relation("AttendanceRecordedBy")
 }
 
 enum UserStatus {
@@ -76,6 +78,7 @@ model Activity {
   organizer       User                    @relation(fields: [organizerId], references: [id], onDelete: Restrict)
   registrations   Registration[]
   history         ActivityStatusHistory[]
+  attendance      Attendance[]
 
   @@index([status, startDate])
   @@index([organizerId])
@@ -91,6 +94,7 @@ model Registration {
   user         User                        @relation(fields: [userId], references: [id], onDelete: Restrict)
   activity     Activity                    @relation(fields: [activityId], references: [id], onDelete: Restrict)
   history      RegistrationStatusHistory[]
+  attendance   Attendance?
 
   @@unique([userId, activityId])
   @@index([activityId, status])
@@ -122,6 +126,30 @@ model ActivityStatusHistory {
   actor      User            @relation(fields: [actorId], references: [id], onDelete: Restrict)
 
   @@index([activityId, createdAt])
+}
+
+enum AttendanceStatus {
+  ATTENDED
+  ABSENT
+}
+
+model Attendance {
+  id             String           @id @default(cuid())
+  registrationId String           @unique
+  activityId     String
+  userId         String
+  status         AttendanceStatus
+  volunteerHours Decimal          @default(0) @db.Decimal(6, 2)
+  recordedById   String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  registration   Registration     @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  activity       Activity         @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user           User             @relation("AttendanceUser", fields: [userId], references: [id], onDelete: Restrict)
+  recordedBy     User             @relation("AttendanceRecordedBy", fields: [recordedById], references: [id], onDelete: Restrict)
+
+  @@index([activityId, status])
+  @@index([userId, status])
 }
 
 model Notification {
