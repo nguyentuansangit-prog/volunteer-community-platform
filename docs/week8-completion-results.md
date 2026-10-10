@@ -49,6 +49,8 @@ Hai biến QA_DATABASE_NAME và QA_SEED_PASSWORD được tạo riêng cho Previ
 
 Nguồn deployment: https://vercel.com/nguyentuansangit-progs-projects/volunteer-community-platform/5hbe8sxSp3FiP4qA9exoebxo3pxN
 
+Cập nhật chẩn đoán: chủ dự án đọc chi tiết Provisioning Integrations và cung cấp thông báo Neon: **“Branch limit reached. Upgrade your plan or delete unused branches.”** Đây là bằng chứng do chủ dự án cung cấp, chưa được trợ lý đọc trực tiếp do browser connector mất kết nối. Cần kiểm kê tên/ID/endpoint và môi trường sử dụng từng nhánh trước khi đề xuất xóa nhánh Preview bỏ đi; không xóa nhánh đang dùng hoặc tự nâng gói có phí. Không redeploy lặp lại khi giới hạn chưa được giải quyết.
+
 ## Điều kiện đóng việc
 
 Các issue #46–#51 giữ mở cho đến khi đầu ra tương ứng có bằng chứng và được chấp nhận. Không đóng #38/#43 chỉ dựa trên local retest khi bản sửa chưa merge vào main. Không tự tạo review hoặc feedback mang tên thành viên/người dùng. Bản ứng viên có thể review ngay; chưa đủ chứng cứ để gọi toàn bộ tuần 8 hoàn tất hoặc production đã phát hành.
