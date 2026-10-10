@@ -2,6 +2,8 @@
 
 Sprint: 12–18/10/2026 theo GitHub Project. Tài liệu này là quy trình và danh mục bằng chứng, không xác nhận production đã phát hành.
 
+Ứng viên tích hợp mới: [PR #55](https://github.com/nguyentuansangit-prog/volunteer-community-platform/pull/55), code 3ac8896. Xem [kết quả theo từng thành viên và release gate](week8-completion-results.md). [Slides bàn giao](evidence/week8/week8-handover-final.pptx) đã có; đây là tài liệu diễn tập, chưa phải video buổi demo hoặc UAT của thành viên. Các trạng thái chờ bên dưới chỉ được đóng khi đủ bằng chứng thực tế.
+
 ## Trách nhiệm và điều kiện chấp nhận
 
 | Người | Issue | Bằng chứng cần bàn giao |
