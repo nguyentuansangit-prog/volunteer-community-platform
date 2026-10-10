@@ -1,15 +1,12 @@
-import { auth } from "../../../auth";
-import { prisma } from "@/lib/prisma";
+import { currentAccount } from "@/lib/current-account";
 import ActivityWorkspace from "@/components/activity-workspace";
 
-export default async function ActivitiesPage() {
-  const session = await auth();
-  const account = session?.user?.id ? await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { id: true, name: true, role: true, status: true },
-  }) : null;
-  const user = account?.status === "ACTIVE"
+export default async function ActivitiesPage({ searchParams }: { searchParams: Promise<{ scope?: string }> }) {
+  const [account, params] = await Promise.all([currentAccount(), searchParams]);
+  const user = account
     ? { id: account.id, name: account.name, role: account.role }
     : null;
-  return <ActivityWorkspace user={user} />;
+  const initialTab = params.scope === "managed" && user && user.role !== "VOLUNTEER" ? "managed"
+    : params.scope === "mine" && user ? "mine" : "public";
+  return <ActivityWorkspace key={`${user?.id ?? "guest"}:${user?.role ?? "guest"}:${initialTab}`} user={user} initialTab={initialTab} />;
 }
