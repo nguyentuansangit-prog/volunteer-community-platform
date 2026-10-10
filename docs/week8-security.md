@@ -2,6 +2,8 @@
 
 ## Cập nhật ứng viên tích hợp 10/10/2026
 
+Code0648a17 đã bổ sung rate limiting dùng PostgreSQL cho login/register và message UI; đã qua 4 integration/6 HTTP groups, lint/build và migration/restore5 migrations. [Chính sách, kết quả và giới hạn](week8-auth-protection.md). Các dòng bên dưới nói rate limiting chưa có là lịch sử trước bản này. Cloud verification, review quota/rủi ro và QA/UAT vẫn chưa hoàn thành; audit residual5 high lint braces không đổi.
+
 Nhánh release/week8-completion tại 3ac8896 đã override riêng @prisma/config/deepmerge-ts lên 8.0.0, giữ mysql2 3.24.5. Generate, validate, bốn migrations, unit/integration/HTTP, scoped lint và production build đã đạt trên DB riêng. Audit còn 5 high thuộc chuỗi braces của công cụ lint; [audit JSON](evidence/week8-completion-audit.json). Bảng dưới là quyết định ngày 09/10, đã được cập nhật đối với deepmerge-ts bởi đoạn này. Xem [kết quả tích hợp](week8-completion-results.md) và PR #55 cho release gate hiện hành. Rate limiting login/register và review residual risk vẫn là điều kiện public release chưa được xác nhận.
 
 Audit thực thi với npm trên base #52 b59a335 và bản hardening. Không chạy `audit fix --force`: đề nghị đó hạ Prisma xuống 6 và Next ESLint xuống 14, phá compatibility hiện tại.

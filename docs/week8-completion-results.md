@@ -2,6 +2,8 @@
 
 Ngày kiểm tra: 10/10/2026 (Asia/Ho_Chi_Minh). Nhánh `release/week8-completion`, mã ứng viên `3ac88963172d044c50abda21cc0bddcb799d370d`. Đây là công việc bổ sung do trợ lý thực hiện theo yêu cầu của chủ dự án; không gán việc thực thi hoặc chữ ký nghiệm thu cho các thành viên.
 
+**Cập nhật code mới:** `0648a177abd1fee5daed08d52096c8a4daea868a` bổ sung [bảo vệ đăng nhập/đăng ký phân tán](week8-auth-protection.md). Đã kiểm tra 4 nhóm integration và 6 nhóm HTTP, 0 fail/skip; lint/build/TypeScript đạt, 5 migrations và backup/restore DB QA mới đạt. Bảng kiểm thử và slides bên dưới giữ kết quả lịch sử3ac8896; xem tài liệu bảo vệ tài khoản cho evidence phiên bản mới. Preview vẫn bị chặn bởi giới hạn nhánh Neon.
+
 ## Kết quả theo phạm vi thành viên
 
 | Phạm vi | Đã thực hiện | Còn cần bằng chứng thực tế |

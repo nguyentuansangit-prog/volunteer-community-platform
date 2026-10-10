@@ -1,5 +1,7 @@
 # Migration, backup và rollback — tuần 8
 
+Ứng viên0648a17 thêm migration thứ5 `20261010020000_auth_rate_limits`; deploy migration trước code auth mới. Đây là bảng/index bổ sung, rollback app có thể giữ bảng. Diễn tập mới vào volunteer_week8_security_restore_test đã đạt5 migrations và AuthRateLimit; [chi tiết](week8-auth-protection.md). Các mục ngày09/10 bên dưới ghi kết quả lịch sử4 migrations.
+
 ## Cấu hình
 
 Runtime dùng DATABASE_URL pooled; Prisma CLI dùng DATABASE_URL_UNPOOLED nếu được đặt, fallback DATABASE_URL. Cả hai áp dụng cùng QA_DATABASE_NAME chỉ khi VERCEL_ENV=preview và tên khớp volunteer_*_test. AUTH_SECRET phải ngẫu nhiên, giữ trong env store. QA_SEED_PASSWORD chỉ đặt ở Preview test riêng; không đặt QA flags cho production. Không commit .env hoặc backup có dữ liệu người dùng.

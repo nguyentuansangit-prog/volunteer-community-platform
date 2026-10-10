@@ -1,6 +1,6 @@
 # Backend và database — tuần 8
 
-Candidate kỹ thuật: kế thừa PR #52, base `b59a335a3a400b0deb8a27677966fae78647d8eb`; chưa phải main/production. Nguồn chuẩn: `prisma/schema.prisma`, migrations và `src/lib`. Guest là người chưa đăng nhập, không phải enum Role.
+Candidate hiện tại0648a17 / PR #55 kế thừa PR #52; chưa phải main/production. Nguồn chuẩn: `prisma/schema.prisma`, migrations và `src/lib`. Guest là người chưa đăng nhập, không phải enum Role. [AuthRateLimit và chính sách login/register](week8-auth-protection.md) là cập nhật mới; phần contract cốt lõi bên dưới vẫn áp dụng.
 
 ## ERD
 
@@ -28,7 +28,7 @@ IDs là String/cuid, không phải số nguyên. Attendance unique registrationI
 - API đọc role/status hiện tại từ DB, không tin JWT cũ. Writes cookie phải có Origin cùng ứng dụng. Response thành công `{data}`; lỗi `{error:{code,message}}`, validation có issues. Thành công không cache; lỗi 401/403/404/409/422/500 theo nguyên nhân.
 - Chỉ VOLUNTEER đăng ký; quản lý và attendance chỉ Organizer sở hữu hoặc Admin. Public xem PUBLISHED/CLOSED; managed là phạm vi owner hoặc toàn hệ thống của Admin.
 - Writes cùng Activity dùng PostgreSQL FOR UPDATE. Capacity đếm APPROVED và kiểm tra sau lock. Unique registration ngăn gửi trùng. Attendance upsert 1 record, ABSENT = 0 giờ, ATTENDED không vượt thời lượng; hủy xóa attendance cùng transaction. Dashboard tính tổng bản ghi ATTENDED, không cộng vào một counter User.
-- Notifications tạo trong transaction duyệt; list/read chỉ chủ sở hữu. History lưu actor/from/to/reason. Không có rate limiting phân tán cho login/register trong candidate: cần cấu hình trước public release theo traffic và chính sách nhóm.
+- Notifications tạo trong transaction duyệt; list/read chỉ chủ sở hữu. History lưu actor/from/to/reason. Login/register có rate limiting phân tán qua PostgreSQL tại0648a17; cần cloud verification và review quota theo traffic trước public release.
 - Attendance trước giờ bắt đầu, hủy APPROVED, public CLOSED, search description và định nghĩa dashboard còn cần Phúc chốt ở #47. Không tự đổi nghiệp vụ trong bản hardening.
 
 ## API thực tế
